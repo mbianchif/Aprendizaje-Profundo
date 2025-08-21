@@ -16,14 +16,14 @@ Los $\xi^{\mu}_{i}$ son los patrones guardados previamente en la red. Los estado
 
 Los valores de activación de este modelo son $+1$ (activo) y -1 (inactivo) en vez de $1$ y $0$, se llaman $S_{i}$ en vez de $n_{i}$. Se puede pasar entre notaciones teniendo en cuenta que $S_{i} = 2n_{i} - 1$. Ahora esta ecuación modela a cada neurona en la red:
 
-$$S_{i} := \operatorname{sgn}\left(\sum_{j} w_{ij} S_{j} - \theta_{i}\right)$$
+$$S_{i} := sgn\left(\sum_{j} w_{ij} S_{j} - \theta_{i}\right)$$
 
-donde utiliza la función signo $\operatorname{sgn}(x)$ como función de activación.
+donde utiliza la función signo $sgn(x)$ como función de activación.
 
 ![Función signo sgn(x).](imagenes/Sign-Function.png)
 
 $$
-\operatorname{sgn(x)} =
+sgn(x) =
 \begin{cases}
    1 & \text{if } x \geq 0, \\
   -1 & \text{if } x < 0,
@@ -32,7 +32,7 @@ $$
 
 acá decide el libro dejar el término de $\theta_{i}$, por lo que finalmente termina siendo así:
 
-$$S_{i} := \operatorname{sgn}\left(\sum_{j} w_{ij} S_{j}\right)$$
+$$S_{i} := sgn\left(\sum_{j} w_{ij} S_{j}\right)$$
 
 ## Tipos de entrenamiento
 
@@ -46,7 +46,7 @@ $$S_{i} := \operatorname{sgn}\left(\sum_{j} w_{ij} S_{j}\right)$$
 Para considerar a un patrón como estable basta con que:
 
 $$
-\operatorname{sgn}\left(\sum_{j} w_{ij} \xi_{j}\right) = \xi_{i}, \qquad \forall i
+sgn\left(\sum_{j} w_{ij} \xi_{j}\right) = \xi_{i}, \qquad \forall i
 $$
 
 Los pesos se definen de la siguiente manera, se entrena la red con:
@@ -70,7 +70,7 @@ Donde $p$ es la cantidad de patrones a aprender, $i$ y $j$ son el subíndice del
 Para considerar un patrón como estable ahora tenemos que:
 
 $$
-\operatorname{sgn}(h^{\nu}_{i}) = \xi^{\nu}_{i}, \qquad \forall i
+sgn(h^{\nu}_{i}) = \xi^{\nu}_{i}, \qquad \forall i
 $$
 
 donde
@@ -114,7 +114,7 @@ Una propiedad importante de esta funcíon es que es siempre **decreciente** (o s
 Como estableció el libro antes, si tenemos aprendido el patrón $\xi$ entonces $-\xi$ es un estado estable y tienen la misma energía. Por ende estos son mínimos locales en la función de energía de Hopfield. Pero no son los únicos, también existen combinaciones de los patrones aprendidos tales que son **mezclas** de otros atractores pero distintos a todos ellos. Son combinaciones lineales de una cantidad impar de ellos, por ejemplo:
 
 $$
-\xi^{mix}_{i} = \operatorname{sgn}\left(\pm \xi^{\mu_{1}}_{i} \pm \xi^{\mu_{2}}_{i} \pm \xi^{\mu_{3}}_{i}\right)
+\xi^{mix}_{i} = sgn\left(\pm \xi^{\mu_{1}}_{i} \pm \xi^{\mu_{2}}_{i} \pm \xi^{\mu_{3}}_{i}\right)
 $$
 
 Cualquier combinación de signos van a dar un atractor mezcla.

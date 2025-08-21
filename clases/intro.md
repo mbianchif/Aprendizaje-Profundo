@@ -20,6 +20,6 @@ $$
 
 ## Neurona más generica
 
-$$n_{i} := \operatorname{g}\left(\sum_{j} w_{ij} n_{j} - \mu_{i}\right)$$
+$$n_{i} := g\left(\sum_{j} w_{ij} n_{j} - \mu_{i}\right)$$
 
-$\operatorname{g}$ es la función de activación (activation function, gain function, transfer function or squashing function). Como el entrenamiento es asincrónico, se pierde la noción de tiempo, ahora las neuronas se entrenan de forma aleatoria.
+$g$ es la función de activación (activation function, gain function, transfer function or squashing function). Como el entrenamiento es asincrónico, se pierde la noción de tiempo, ahora las neuronas se entrenan de forma aleatoria.
