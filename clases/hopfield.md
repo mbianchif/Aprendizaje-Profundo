@@ -63,7 +63,7 @@ Podríamos imaginar que el espacio de configuraciones está partido en 2, aquell
 
 Ahora definimos los pesos de la siguiente manera (Regla de Hebb):
 
-$$w_{ij} = \frac{1}{N} \sum^{p}_{\mu=1} \xi^{\mu}_{i} \xi^{\mu}_{j}$$
+$$w_{ij} = \frac{1}{N} \sum_{\mu=1}^{p} \xi_{i}^{\mu} \xi_{j}^{\mu}$$
 
 Donde $p$ es la cantidad de patrones a aprender, $i$ y $j$ son el subíndice del patrón donde $\xi^{\mu}_{i}$ representa el i-ésimo valor del mu-ésimo patrón.
 
@@ -100,7 +100,7 @@ que es lo mísmo que $-\xi^{\nu}_{i}$ multiplicado por el `crosstalk term`. Si $
 La función de energía se define como:
 
 $$
-H = -\frac{1}{2} \sum_{i} \sum{j} w_{ij} S_{i} S_{j}
+H = -\frac{1}{2} \sum_{i} \sum_{j} w_{ij} S_{i} S_{j}
 $$
 
 ![Superficie de energía.](imagenes/Energy-Landscape.png)
