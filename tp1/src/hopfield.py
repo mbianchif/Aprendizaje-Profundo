@@ -1,20 +1,13 @@
 import random
+from src.pattern import Pattern
 
 
 class Hopfield:
     def __init__(self, n: int):
         self.ws = [[0] * n for _ in range(n)]
 
-    def h(self, p: list[int], i: int) -> int:
-        n = len(p)
-        return sum(self.ws[i][j] * p[j] for j in range(n) if i != j)
-
-    def g(self, x: int) -> int:
-        return 1 if x >= 0 else -1
-
-    def train(self, p: list[int], etha: int = 1):
-        n = len(p)
-        idxs = list(range(n))
+    def train(self, p: Pattern, etha: int = 1):
+        idxs = list(range(len(p)))
         random.shuffle(idxs)
 
         for i in idxs:
@@ -23,17 +16,10 @@ class Hopfield:
                     dwij = etha * p[i] * p[j]
                     self.ws[i][j] += dwij
 
-    def learnt(self, p: list[int]) -> bool:
-        n = len(p)
+    def learned(self, p: Pattern) -> bool:
+        return all(self._eval(p, i) == p[i] for i in range(len(p)))
 
-        for i in range(n):
-            s = self.g(self.h(p, i))
-            if s != p[i]:
-                return False
-
-        return True
-
-    def converge(self, p: list[int]) -> int:
+    def converge(self, p: Pattern) -> int:
         n = len(p)
         idxs = list(range(n))
         modified = True
@@ -44,12 +30,19 @@ class Hopfield:
             random.shuffle(idxs)
 
             for i in range(n):
-                s = self.g(self.h(p, i))
-                if p[i] != s:
-                    modified = True
-
+                s = self._eval(p, i)
+                modified |= p[i] != s
                 p[i] = s
 
             steps += 1
 
         return steps
+
+    def _sign(self, x: int) -> int:
+        return 1 if x >= 0 else -1
+
+    def _out(self, p: Pattern, i: int) -> int:
+        return sum(self.ws[i][j] * p[j] for j in range(len(p)) if i != j)
+
+    def _eval(self, p: Pattern, i: int) -> int:
+        return self._sign(self._out(p, i))

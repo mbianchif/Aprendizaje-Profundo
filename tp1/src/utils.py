@@ -1,25 +1,42 @@
-from typing import Iterable
+from src.pattern import Pattern
+from typing import Callable, Iterable
 from PIL import Image
 import random
 import os
 
 
-def retrieve_images(path: str) -> Iterable[list[int]]:
-    images = (
-        Image.open(f"{path}/{file_path}").convert("1") for file_path in os.listdir(path)
-    )
+def retrieve_patterns(path: str) -> Iterable[Pattern]:
+    open_file = lambda x: Image.open(f"{path}/{x}").convert("1")
 
-    for image in images:
-        yield [1 if p else -1 for p in image.getdata()]
-        image.close()
+    for filename in os.listdir(path):
+        file = open_file(filename)
+        data = [2 * p - 1 for p in file.getdata()]
+        file.close()
+        yield Pattern(filename, data)
 
 
-def add_noise(p: list[int], n: int) -> list[int]:
+def _random_map(p: Pattern, k: int, f: Callable):
     idxs = list(range(len(p)))
     random.shuffle(idxs)
-    altered = p.copy()
 
-    for i in range(n):
-        altered[idxs[i]] = -altered[idxs[i]]
+    p = p.copy()
+    altered = 0
 
-    return altered
+    for i in idxs:
+        if altered == k:
+            break
+
+        fp = f(p[i])
+        if fp != p[i]:
+            p[i] = fp
+            altered += 1
+
+    return p
+
+
+def flip_bytes(p: Pattern, k: int) -> Pattern:
+    return _random_map(p, k, lambda x: -x)
+
+
+def paint_bytes(p: Pattern, k: int, val: int) -> Pattern:
+    return _random_map(p, k, lambda _: val)
