@@ -6,9 +6,7 @@ El TP consiste en una guía de ejercicios donde se modela, entrena y valida el e
 
 Para extraer las imágenes ejecutar:
 ```sh
-unzip images.zip
-mkdir images
-mv *.bmp images/
+unzip images.zip -d images
 ```
 
 ## Ejecución del Notebook
