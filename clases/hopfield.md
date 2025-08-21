@@ -69,31 +69,29 @@ Donde $p$ es la cantidad de patrones a aprender, $i$ y $j$ son el subíndice del
 
 Para considerar un patrón como estable ahora tenemos que:
 
-$$sgn(h^{\nu}_{i}) = \xi^{\nu}_{i}, \qquad \forall i$$
+$$sgn(h_{i}^{\nu}) = \xi_{i}^{\nu}, \qquad \forall i$$
 
 donde
 
 $$
-h^{\nu}_{i} \equiv \sum_{j} w_{ij} \xi^{\nu}_{j} = \frac{1}{N} \sum_{j} \sum_{\mu} \xi^{\mu}_{i} \xi^{\mu}_{j} \xi^{\nu}_{j}
+h_{i}^{\nu} \equiv \sum_{j} w_{ij} \xi_{j}^{\nu} = \frac{1}{N} \sum_{j} \sum_{\mu} \xi_{i}^{\mu} \xi_{j}^{\mu} \xi_{j}^{\nu}
 $$
 
 donde podemos tomar de la última igualdad que:
 
 $$
-h^{\nu}_{i} = \xi^{\nu}_{i} + \frac{1}{N} \sum_{j} \sum_{\mu \ne \nu} \xi^{\mu}_{i} \xi^{\mu}_{j} \xi^{\nu}_{j}
+h_{i}^{\nu} = \xi_{i}^{\nu} + \frac{1}{N} \sum_{j} \sum_{\mu \ne \nu} \xi_{i}^{\mu} \xi_{j}^{\mu} \xi_{j}^{\nu}
 $$
 
 El segundo término se llama `crosstalk term` o `término de diafonía` que si es chico para todo $i$ y todo $\nu$, entonces la red aprendió los patrones, osea, los patrones almacenados son estables.
 
 ## Capacidad de almacenamiento
 
-La capacidad de almacenamiento es 
-
 Podemos calcular la capacidad de almacenamiento de la red de la siguiente manera:
 
-$$C^{\nu}_{i} \equiv -\xi^{\nu}_{i} \frac{1}{N} \sum_{j} \sum_{\mu \ne \nu} \xi^{\mu}_{i} \xi^{\mu}_{j} \xi^{\nu}_{j}$$
+$$C_{i}^{\nu} \equiv -\xi_{i}^{\nu} \frac{1}{N} \sum_{j} \sum_{\mu \ne \nu} \xi_{i}^{\mu} \xi_{j}^{\mu} \xi_{j}^{\nu}$$
 
-que es lo mísmo que $-\xi^{\nu}_{i}$ multiplicado por el `crosstalk term`. Si $C^{\nu}_{i}$ es negativo, el `crosstalk term` tiene el mismo signo que $\xi^{\nu}_{i}$ y entonces está bien. Pero si $C^{\nu}_{i}$ es positivo y mayor a $1$, cambia el signo de $h^{\nu}_{i}$ y hace el bit (o neurona) $i$ del patrón $\nu$ inestable; si empezaramos el sistema en el patrón deseable $\xi^{nu}_{i}$, **no** se quedaría ahí.
+que es lo mísmo que $-\xi_{i}^{\nu}$ multiplicado por el `crosstalk term`. Si $C_{i}^{\nu}$ es negativo, el `crosstalk term` tiene el mismo signo que $\xi_{i}^{\nu}$ y entonces está bien. Pero si $C_{i}^{\nu}$ es positivo y mayor a $1$, cambia el signo de $h_{i}^{\nu}$ y hace el bit (o neurona) $i$ del patrón $\nu$ inestable; si empezaramos el sistema en el patrón deseable $\xi_{i}^{nu}$, **no** se quedaría ahí.
 
 ## Función de Energía
 
@@ -112,7 +110,7 @@ Una propiedad importante de esta funcíon es que es siempre **decreciente** (o s
 Como estableció el libro antes, si tenemos aprendido el patrón $\xi$ entonces $-\xi$ es un estado estable y tienen la misma energía. Por ende estos son mínimos locales en la función de energía de Hopfield. Pero no son los únicos, también existen combinaciones de los patrones aprendidos tales que son **mezclas** de otros atractores pero distintos a todos ellos. Son combinaciones lineales de una cantidad impar de ellos, por ejemplo:
 
 $$
-\xi^{mix}_{i} = sgn\left(\pm \xi^{\mu_{1}}_{i} \pm \xi^{\mu_{2}}_{i} \pm \xi^{\mu_{3}}_{i}\right)
+\xi_{i}^{mix} = sgn\left(\pm \xi_{i}^{\mu_{1}} \pm \xi_{i}^{\mu_{2}} \pm \xi_{i}^{\mu_{3}}\right)
 $$
 
 Cualquier combinación de signos van a dar un atractor mezcla.
