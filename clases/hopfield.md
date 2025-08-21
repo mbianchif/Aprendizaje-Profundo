@@ -16,7 +16,7 @@ Los $\xi^{\mu}_{i}$ son los patrones guardados previamente en la red. Los estado
 
 Los valores de activación de este modelo son $+1$ (activo) y -1 (inactivo) en vez de $1$ y $0$, se llaman $S_{i}$ en vez de $n_{i}$. Se puede pasar entre notaciones teniendo en cuenta que $S_{i} = 2n_{i} - 1$. Ahora esta ecuación modela a cada neurona en la red:
 
-$$S_{i} := sgn\left(\sum_{j} w_{ij} S_{j} - \theta_{i}\right)$$
+$$S_{i} \coloneqq sgn\left(\sum_{j} w_{ij} S_{j} - \theta_{i}\right)$$
 
 donde utiliza la función signo $sgn(x)$ como función de activación.
 
@@ -32,7 +32,7 @@ $$
 
 acá decide el libro dejar el término de $\theta_{i}$, por lo que finalmente termina siendo así:
 
-$$S_{i} := sgn\left(\sum_{j} w_{ij} S_{j}\right)$$
+$$S_{i} \coloneqq sgn\left(\sum_{j} w_{ij} S_{j}\right)$$
 
 ## Tipos de entrenamiento
 
@@ -46,7 +46,7 @@ $$S_{i} := sgn\left(\sum_{j} w_{ij} S_{j}\right)$$
 Para considerar a un patrón como estable basta con que:
 
 $$
-sgn\left(\sum_{j} w_{ij} \xi_{j}\right) = \xi_{i}, \qquad \forall i
+sgn\left(\sum_{j} w_{ij} \xi_{j}\right) = \xi_{i} \qquad \forall i
 $$
 
 Los pesos se definen de la siguiente manera, se entrena la red con:
@@ -63,15 +63,13 @@ Podríamos imaginar que el espacio de configuraciones está partido en 2, aquell
 
 Ahora definimos los pesos de la siguiente manera (Regla de Hebb):
 
-$$w_{ij} = \frac{1}{N} \sum^{p}_{\mu = 1} \xi^{\mu}_{i} \xi^{\mu}_{j}$$
+$$w_{ij} = \frac{1}{N} \sum^{p}_{\mu=1} \xi^{\mu}_{i} \xi^{\mu}_{j}$$
 
 Donde $p$ es la cantidad de patrones a aprender, $i$ y $j$ son el subíndice del patrón donde $\xi^{\mu}_{i}$ representa el i-ésimo valor del mu-ésimo patrón.
 
 Para considerar un patrón como estable ahora tenemos que:
 
-$$
-sgn(h^{\nu}_{i}) = \xi^{\nu}_{i}, \qquad \forall i
-$$
+$$sgn(h^{\nu}_{i}) = \xi^{\nu}_{i}, \qquad \forall i$$
 
 donde
 
