@@ -1,20 +1,14 @@
-from typing import Callable, Self
+from typing import Self
 
 
 class Pattern:
     def __init__(self, name: str, data: list[int]):
-        self._data = data
         self.name = name
+        self._validate_data(data)
+        self._data = data
 
     def copy(self) -> Self:
         return self.__class__(self.name, self._data.copy())
-
-    def normalize(self):
-        for i in range(len(self)):
-            if self[i] == 0:
-                raise Exception("invalid value `0` found in pattern")
-
-            self[i] //= abs(self[i])
 
     def __getitem__(self, i: int) -> int:
         return self._data[i]
@@ -25,16 +19,11 @@ class Pattern:
     def __len__(self) -> int:
         return len(self._data)
 
-    def _map(self, p: Self, f: Callable) -> Self:
-        c = self.copy()
+    def __neg__(self) -> Self:
+        negated = [-bit for bit in self._data]
+        return self.__class__(f"neg({self.name})", negated)
 
-        for i in range(len(self)):
-            c[i] = f(c[i], p[i])
-
-        return c
-
-    def __add__(self, p: Self) -> Self:
-        return self._map(p, lambda x, y: x + y)
-
-    def __sub__(self, p: Self) -> Self:
-        return self._map(p, lambda x, y: x - y)
+    def _validate_data(self, data: list[int]):
+        for b in data:
+            if abs(b) != 1:
+                raise ValueError(f"invalid bit value {b} for {self.name}")
