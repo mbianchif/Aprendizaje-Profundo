@@ -23,6 +23,9 @@ class Pattern:
         negated = [-bit for bit in self._data]
         return self.__class__(f"neg({self.name})", negated)
 
+    def __repr__(self) -> str:
+        return f"{self.name}: {self._data}"
+
     def _validate_data(self, data: list[int]):
         for b in data:
             if abs(b) != 1:

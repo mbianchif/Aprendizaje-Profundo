@@ -1,6 +1,5 @@
-from src.hopfield import Hopfield
 from src.pattern import Pattern
-from typing import Callable, Iterable
+from typing import Callable, Generator, Iterable
 from PIL import Image
 import random
 import os
@@ -43,10 +42,6 @@ def paint_bytes(p: Pattern, k: int, val: int) -> Pattern:
     return _random_map(p, k, lambda _: val)
 
 
-def invert_pattern(p: Pattern) -> Pattern:
-    return flip_bytes(p, len(p))
-
-
 def linear_comb(ps: list[Pattern]) -> Pattern:
     k = len(ps)
 
@@ -56,14 +51,36 @@ def linear_comb(ps: list[Pattern]) -> Pattern:
     acc = ps[0].copy()
     n = len(acc)
 
-    for i in range(1, k):
-        for j in range(n):
-            acc[j] += ps[i][j]
+    for mu in range(1, k):
+        for i in range(n):
+            acc[i] += ps[mu][i]
 
-    for j in range(n):
-        acc[j] = 1 if acc[j] > 0 else (-1 if acc[j] < 0 else 0)
-        if acc[j] == 0:
+    for i in range(n):
+        if acc[i] == 0:
             raise ValueError("found 0 in pattern at linear combination")
 
-    acc.name = f"linear_comb({','.join(p.name for p in ps)})"
+        acc[i] //= abs(acc[i])
+
+    acc.name = f"linear_comb({', '.join(p.name for p in ps)})"
     return acc
+
+
+def all_linear_combs(ps: list[Pattern]) -> Generator[Pattern]:
+    n = len(ps)
+
+    def bt(acc):
+        i = len(acc)
+
+        if i == n:
+            yield linear_comb(acc)
+            return
+
+        acc.append(ps[i])
+        yield from bt(acc)
+        acc.pop()
+
+        acc.append(-ps[i])
+        yield from bt(acc)
+        acc.pop()
+
+    yield from bt([])
