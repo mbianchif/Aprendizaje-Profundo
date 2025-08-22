@@ -16,7 +16,7 @@ Los $\xi^{\mu}_{i}$ son los patrones guardados previamente en la red. Los estado
 
 Los valores de activación de este modelo son $+1$ (activo) y -1 (inactivo) en vez de $1$ y $0$, se llaman $S_{i}$ en vez de $n_{i}$. Se puede pasar entre notaciones teniendo en cuenta que $S_{i} = 2n_{i} - 1$. Ahora esta ecuación modela a cada neurona en la red:
 
-$$S_{i} \coloneqq sgn\left(\sum_{j} w_{ij} S_{j} - \theta_{i}\right)$$
+$$S_{i} := sgn\left(\sum_{j} w_{ij} S_{j} - \theta_{i}\right)$$
 
 donde utiliza la función signo $sgn(x)$ como función de activación.
 
@@ -32,7 +32,7 @@ $$
 
 acá decide el libro dejar el término de $\theta_{i}$, por lo que finalmente termina siendo así:
 
-$$S_{i} \coloneqq sgn\left(\sum_{j} w_{ij} S_{j}\right)$$
+$$S_{i} := sgn\left(\sum_{j} w_{ij} S_{j}\right)$$
 
 ## Tipos de entrenamiento
 
@@ -86,6 +86,8 @@ $$
 El segundo término se llama `crosstalk term` o `término de diafonía` que si es chico para todo $i$ y todo $\nu$, entonces la red aprendió los patrones, osea, los patrones almacenados son estables.
 
 ## Capacidad de almacenamiento
+
+La capacidad de la red es la cantidad de patrones aleatorios, no correlacionados que puede almacenar en su memoria de forma que puedan ser recuperados de forma confiable.
 
 Podemos calcular la capacidad de almacenamiento de la red de la siguiente manera:
 
