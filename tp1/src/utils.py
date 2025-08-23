@@ -1,18 +1,44 @@
-from src.pattern import Pattern
-from typing import Callable, Generator, Iterable
-from PIL import Image
+import matplotlib.image as mpimg
+import PIL.Image as im
 import random
 import os
+from src.pattern import Pattern
+from typing import Callable, Generator, Iterable
 
 
-def retrieve_patterns(path: str) -> Iterable[Pattern]:
-    open_file = lambda x: Image.open(f"{path}/{x}").convert("1")
+def pad_to_size(img: im.Image, dim: tuple[int, int]) -> im.Image:
+    res = im.new("L", dim, 0)
+    x = (dim[0] - img.width) // 2
+    y = (dim[1] - img.height) // 2
+    res.paste(img, (x, y))
+    return res
+
+
+def retrieve_patterns(
+    path: str,
+    dim: tuple[int, int] | None = None,
+) -> Iterable[Pattern]:
+    open_file = lambda x: im.open(f"{path}/{x}").convert("L")
 
     for filename in os.listdir(path):
         file = open_file(filename)
-        data = [2 * int(b < 255) - 1 for b in file.getdata()]
-        file.close()
+        if dim:
+            tmp = file
+            file = pad_to_size(file, dim)
+            tmp.close()
+
+        data = [2 * int(b > 127) - 1 for b in file.getdata()]
+        if not dim:
+            file.close()
+
         yield Pattern(filename, data)
+
+
+def retrieve_images(path: str) -> Iterable:
+    open_file = lambda x: mpimg.imread(f"{path}/{x}")
+
+    for filename in os.listdir(path):
+        yield open_file(filename)
 
 
 def _random_map(p: Pattern, k: int, f: Callable):
@@ -51,14 +77,8 @@ def linear_comb(ps: list[Pattern]) -> Pattern:
     acc = ps[0].copy()
     n = len(acc)
 
-    for mu in range(1, k):
-        for i in range(n):
-            acc[i] += ps[mu][i]
-
     for i in range(n):
-        if acc[i] == 0:
-            raise ValueError("found 0 in pattern at linear combination")
-
+        acc[i] = sum(ps[mu][i] for mu in range(1, k))
         acc[i] //= abs(acc[i])
 
     acc.name = f"linear_comb({', '.join(p.name for p in ps)})"
@@ -69,9 +89,7 @@ def all_linear_combs(ps: list[Pattern]) -> Generator[Pattern]:
     n = len(ps)
 
     def bt(acc):
-        i = len(acc)
-
-        if i == n:
+        if (i := len(acc)) == n:
             yield linear_comb(acc)
             return
 
