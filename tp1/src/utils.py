@@ -28,10 +28,9 @@ def retrieve_patterns(
             tmp.close()
 
         data = [2 * int(b > 127) - 1 for b in file.getdata()]
+        yield Pattern(filename, data, file.height, file.width)
         if not dim:
             file.close()
-
-        yield Pattern(filename, data)
 
 
 def retrieve_images(path: str) -> Iterable:
@@ -74,15 +73,19 @@ def linear_comb(ps: list[Pattern]) -> Pattern:
     if k & 1 == 0:
         raise ValueError(f"there must be an odd amount of patterns, given {k}")
 
-    acc = ps[0].copy()
-    n = len(acc)
+    n = len(ps[0])
+    for p in ps:
+        if len(p) != n:
+            raise ValueError("all patterns must have the same size")
+
+    data = [0] * n
 
     for i in range(n):
-        acc[i] = sum(ps[mu][i] for mu in range(1, k))
-        acc[i] //= abs(acc[i])
+        data[i] = sum(ps[mu][i] for mu in range(k))
+        data[i] //= abs(data[i])
 
-    acc.name = f"linear_comb({', '.join(p.name for p in ps)})"
-    return acc
+    name = f"linear_comb({', '.join(p.name for p in ps)})"
+    return Pattern(name, data, *ps[0].shape())
 
 
 def all_linear_combs(ps: list[Pattern]) -> Generator[Pattern]:
