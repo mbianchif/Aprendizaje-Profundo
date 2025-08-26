@@ -7,7 +7,12 @@ from typing import Callable, Generator, Iterable
 
 
 def pad_to_size(img: im.Image, dim: tuple[int, int]) -> im.Image:
-    res = im.new("L", dim, 0)
+    res = im.frombytes(
+        "L",
+        dim,
+        bytes(random.choice((0, 255)) for _ in range(dim[0] * dim[1])),
+    )
+
     x = (dim[0] - img.width) // 2
     y = (dim[1] - img.height) // 2
     res.paste(img, (x, y))
