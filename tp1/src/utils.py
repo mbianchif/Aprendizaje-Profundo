@@ -1,5 +1,6 @@
 import matplotlib.image as mpimg
 import PIL.Image as im
+import numpy as np
 import random
 import os
 from src.pattern import Pattern
@@ -32,7 +33,7 @@ def retrieve_patterns(
             file = pad_to_size(file, dim)
             tmp.close()
 
-        data = [2 * int(b > 127) - 1 for b in file.getdata()]
+        data = np.array([2 * int(b > 127) - 1 for b in file.getdata()], dtype=int)
         yield Pattern(filename, data, file.height, file.width)
         if not dim:
             file.close()
@@ -83,7 +84,7 @@ def linear_comb(ps: list[Pattern]) -> Pattern:
         if len(p) != n:
             raise ValueError("all patterns must have the same size")
 
-    data = [0] * n
+    data = np.zeros((n, 1), dtype=float)
 
     for i in range(n):
         data[i] = sum(ps[mu][i] for mu in range(k))
