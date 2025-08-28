@@ -14,7 +14,7 @@ class Hopfield:
         while a <= b:
             mid = (a + b) >> 1
 
-            m = cls(mid)
+            m = cls(n)
             P = np.random.choice([-1, 1], size=(mid, n))
             m.train(P)
 
