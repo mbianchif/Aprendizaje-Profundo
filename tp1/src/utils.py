@@ -1,9 +1,9 @@
+from collections import defaultdict
 import matplotlib.image as mpimg
 import PIL.Image as im
 import numpy as np
 import random
 import os
-from src.pattern import Pattern
 from typing import Callable, Generator, Iterable
 
 
@@ -23,30 +23,32 @@ def pad_to_size(img: im.Image, dim: tuple[int, int]) -> im.Image:
 def retrieve_patterns(
     path: str,
     dim: tuple[int, int] | None = None,
-) -> Iterable[Pattern]:
+) -> Iterable[np.ndarray]:
     open_file = lambda x: im.open(f"{path}/{x}").convert("L")
+    patterns = defaultdict(list)
 
     for filename in os.listdir(path):
-        file = open_file(filename)
-        if dim:
-            tmp = file
-            file = pad_to_size(file, dim)
-            tmp.close()
+        with open_file(filename) as f:
+            if dim:
+                f = pad_to_size(f, dim)
 
-        data = np.array([2 * int(b > 127) - 1 for b in file.getdata()], dtype=int)
-        yield Pattern(filename, data, file.height, file.width)
-        if not dim:
-            file.close()
+            data = np.array(f, dtype=int).flatten()
+            data = 2 * (data > 127) - 1
+
+            patterns[len(data)].append(data)
+
+    for ps in patterns.values():
+        yield np.array(ps, dtype=int)
 
 
-def retrieve_images(path: str) -> Iterable:
+def retrieve_images(path: str) -> Iterable[np.ndarray]:
     open_file = lambda x: mpimg.imread(f"{path}/{x}")
 
     for filename in os.listdir(path):
         yield open_file(filename)
 
 
-def _random_map(p: Pattern, k: int, f: Callable):
+def _random_map(p: np.ndarray, k: int, f: Callable):
     idxs = list(range(len(p)))
     random.shuffle(idxs)
 
@@ -65,48 +67,27 @@ def _random_map(p: Pattern, k: int, f: Callable):
     return p
 
 
-def flip_bytes(p: Pattern, k: int) -> Pattern:
+def flip_bytes(p: np.ndarray, k: int) -> np.ndarray:
     return _random_map(p, k, lambda x: -x)
 
 
-def paint_bytes(p: Pattern, k: int, val: int) -> Pattern:
+def paint_bytes(p: np.ndarray, k: int, val: int) -> np.ndarray:
     return _random_map(p, k, lambda _: val)
 
 
-def linear_comb(ps: list[Pattern]) -> Pattern:
-    k = len(ps)
-
-    if k & 1 == 0:
-        raise ValueError(f"there must be an odd amount of patterns, given {k}")
-
-    n = len(ps[0])
-    for p in ps:
-        if len(p) != n:
-            raise ValueError("all patterns must have the same size")
-
-    data = np.zeros((n, 1), dtype=float)
-
-    for i in range(n):
-        data[i] = sum(ps[mu][i] for mu in range(k))
-        data[i] //= abs(data[i])
-
-    name = f"linear_comb({', '.join(p.name for p in ps)})"
-    return Pattern(name, data, *ps[0].shape())
-
-
-def all_linear_combs(ps: list[Pattern]) -> Generator[Pattern]:
-    n = len(ps)
+def all_linear_combs(P: np.ndarray) -> Generator[np.ndarray]:
+    n = len(P)
 
     def bt(acc):
         if (i := len(acc)) == n:
-            yield linear_comb(acc)
+            yield np.sum(acc, axis=0)
             return
 
-        acc.append(ps[i])
+        acc.append(P[i])
         yield from bt(acc)
         acc.pop()
 
-        acc.append(-ps[i])
+        acc.append(-P[i])
         yield from bt(acc)
         acc.pop()
 

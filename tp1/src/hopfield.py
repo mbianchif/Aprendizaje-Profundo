@@ -1,6 +1,5 @@
+from itertools import count
 import numpy as np
-from typing import Iterable
-from src.pattern import Pattern
 
 
 class Hopfield:
@@ -8,19 +7,34 @@ class Hopfield:
         self.W = np.zeros((n, n), dtype=float)
         self.n = n
 
-    def train(self, P: np.ndarray, etha: float = 1.0):
-        self.W = etha * (P.T @ P) / self.n
+    @classmethod
+    def capacity(cls, p_error: int, n: int) -> int:
+        for p_max in count(1):
+            m = cls(n)
+
+            P = np.random.choice([-1, 1], size=(p_max, n))
+            m.train(P)
+
+            S = m._sign(P @ m.W)
+            e_total = np.sum(np.where(S != P, 1, 0)) / (n * p_max)
+
+            if e_total >= p_error:
+                return p_max - 1
+
+        return -1
+
+    def train(self, P: np.ndarray):
+        self.W = (P.T @ P) / self.n
         np.fill_diagonal(self.W, 0)
 
-    def is_stable(self, p: Pattern) -> bool:
-        self._validate_size(len(p))
-        ss = self._sign_vec(self.W @ p.data)
-        return np.array_equal(ss, p.data)
+    def is_stable(self, p: np.ndarray) -> bool:
+        ss = self._sign(self.W @ p)
+        return np.array_equal(ss, p)
 
-    def recall(self, p: Pattern) -> tuple[Pattern, int]:
-        self._validate_size(n := len(p))
-
+    def recall(self, p: np.ndarray) -> tuple[np.ndarray, int]:
         p = p.copy()
+
+        n = len(p)
         idxs = np.arange(n, dtype=int)
         modified = True
         steps = 0
@@ -31,7 +45,7 @@ class Hopfield:
             steps += 1
 
             for i in idxs:
-                s = self._eval(p, i)
+                s = self._sign(self.W[i] @ p)
                 modified |= p[i] != s
                 p[i] = s
 
@@ -40,18 +54,5 @@ class Hopfield:
     def __len__(self) -> int:
         return self.n
 
-    def _out(self, p: Pattern, i: int) -> float:
-        return self.W[i] @ p.data
-
-    def _sign(self, x: float) -> int:
-        return 1 if x >= 0 else -1
-
-    def _sign_vec(self, x: np.ndarray) -> np.ndarray:
+    def _sign(self, x: np.ndarray) -> np.ndarray:
         return np.where(x >= 0, 1, -1)
-
-    def _eval(self, p: Pattern, i: int) -> int:
-        return self._sign(self._out(p, i))
-
-    def _validate_size(self, n: int):
-        if self.n != n:
-            raise ValueError(f"size of pattern {n} doesn't match network size {self.n}")
