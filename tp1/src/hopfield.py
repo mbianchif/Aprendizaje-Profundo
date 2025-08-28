@@ -1,4 +1,3 @@
-from itertools import count
 import numpy as np
 
 
@@ -8,20 +7,27 @@ class Hopfield:
         self.n = n
 
     @classmethod
-    def capacity(cls, p_error: int, n: int) -> int:
-        for p_max in count(1):
-            m = cls(n)
+    def capacity(cls, p_error: float, n: int) -> int:
+        a, b = 1, n
+        best = 0
 
-            P = np.random.choice([-1, 1], size=(p_max, n))
+        while a <= b:
+            mid = (a + b) >> 1
+
+            m = cls(mid)
+            P = np.random.choice([-1, 1], size=(mid, n))
             m.train(P)
 
             S = m._sign(P @ m.W)
-            e_total = np.sum(np.abs(S - P)) / (n * p_max)
+            e_total = np.sum(S != P) / (n * mid)
 
-            if e_total >= p_error:
-                return p_max - 1
+            if e_total < p_error:
+                best = mid
+                a = mid + 1
+            else:
+                b = mid - 1
 
-        return -1
+        return best
 
     def train(self, P: np.ndarray):
         self.W = (P.T @ P) / self.n
