@@ -1,10 +1,9 @@
-from collections import defaultdict
-import matplotlib.image as mpimg
 import PIL.Image as im
 import numpy as np
 import random
 import os
-from typing import Callable, Generator, Iterable
+from collections import defaultdict
+from typing import Callable, Iterable
 
 
 def pad_to_size(img: im.Image, dim: tuple[int, int]) -> im.Image:
@@ -23,29 +22,27 @@ def pad_to_size(img: im.Image, dim: tuple[int, int]) -> im.Image:
 def retrieve_patterns(
     path: str,
     dim: tuple[int, int] | None = None,
-) -> Iterable[np.ndarray]:
+) -> Iterable[tuple[np.ndarray, tuple[int, int]]]:
     open_file = lambda x: im.open(f"{path}/{x}").convert("L")
     patterns = defaultdict(list)
+    shapes = {}
 
     for filename in os.listdir(path):
         with open_file(filename) as f:
             if dim:
                 f = pad_to_size(f, dim)
 
-            data = np.array(f, dtype=int).flatten()
+            data = np.array(f, dtype=int)
             data = 2 * (data > 127) - 1
 
-            patterns[len(data)].append(data)
+            flattened = data.flatten()
+            n = len(flattened)
 
-    for ps in patterns.values():
-        yield np.array(ps, dtype=int)
+            shapes[n] = data.shape
+            patterns[n].append(flattened)
 
-
-def retrieve_images(path: str) -> Iterable[np.ndarray]:
-    open_file = lambda x: mpimg.imread(f"{path}/{x}")
-
-    for filename in os.listdir(path):
-        yield open_file(filename)
+    for n, Ps in patterns.items():
+        yield np.array(Ps, dtype=int), shapes[n]
 
 
 def _random_map(p: np.ndarray, k: int, f: Callable):
@@ -68,27 +65,32 @@ def _random_map(p: np.ndarray, k: int, f: Callable):
 
 
 def flip_bytes(p: np.ndarray, k: int) -> np.ndarray:
-    return _random_map(p, k, lambda x: -x)
+    return _random_map(p, k, lambda b: -b)
 
 
 def paint_bytes(p: np.ndarray, k: int, val: int) -> np.ndarray:
-    return _random_map(p, k, lambda _: val)
+    p = p.copy()
+    p[:k] = val
+    return p
 
 
-def all_linear_combs(P: np.ndarray) -> Generator[np.ndarray]:
+def all_linear_combs(P: np.ndarray) -> np.ndarray:
     n = len(P)
 
-    def bt(acc):
+    def bt(res, acc):
         if (i := len(acc)) == n:
-            yield np.sum(acc, axis=0)
-            return
+            p = np.where(np.sum(acc, axis=0) >= 0, 1, -1)
+            res.append(p)
+            return res
 
         acc.append(P[i])
-        yield from bt(acc)
+        bt(res, acc)
         acc.pop()
 
         acc.append(-P[i])
-        yield from bt(acc)
+        bt(res, acc)
         acc.pop()
 
-    yield from bt([])
+        return res
+
+    return np.array(bt([], []))

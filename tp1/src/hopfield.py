@@ -16,7 +16,7 @@ class Hopfield:
             m.train(P)
 
             S = m._sign(P @ m.W)
-            e_total = np.sum(np.where(S != P, 1, 0)) / (n * p_max)
+            e_total = np.sum(np.abs(S - P)) / (n * p_max)
 
             if e_total >= p_error:
                 return p_max - 1
