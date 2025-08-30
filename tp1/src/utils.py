@@ -45,7 +45,7 @@ def retrieve_patterns(
         yield np.array(Ps, dtype=int), shapes[n]
 
 
-def _random_map(p: np.ndarray, k: int, f: Callable):
+def _random_map(p: np.ndarray, k: int, f: Callable[[int], int]):
     idxs = list(range(len(p)))
     random.shuffle(idxs)
 

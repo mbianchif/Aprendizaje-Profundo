@@ -1,3 +1,4 @@
+from typing import Callable
 import numpy as np
 
 
@@ -7,7 +8,13 @@ class Hopfield:
         self.n = n
 
     @classmethod
-    def capacity(cls, p_error: float, n: int) -> int:
+    def capacity(
+        cls,
+        p_error: float,
+        n: int,
+        p_prov: Callable[[int, int, float], np.ndarray],
+        corr: float = 0.0,
+    ) -> int:
         a, b = 1, n
         best = 0
 
@@ -15,7 +22,7 @@ class Hopfield:
             mid = (a + b) >> 1
 
             m = cls(n)
-            P = np.random.choice([-1, 1], size=(mid, n))
+            P = p_prov(mid, n, corr)
             m.train(P)
 
             S = m._sign(P @ m.W)
