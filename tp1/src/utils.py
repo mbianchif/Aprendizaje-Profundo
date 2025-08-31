@@ -4,13 +4,18 @@ import random
 import os
 from collections import defaultdict
 from typing import Callable, Iterable
+from numpy.random import Generator
 
 
-def pad_to_size(img: im.Image, dim: tuple[int, int]) -> im.Image:
+def pad_to_size(
+    img: im.Image,
+    dim: tuple[int, int],
+    rng: Generator,
+) -> im.Image:
     res = im.frombytes(
         "L",
         dim,
-        bytes(random.choice((0, 255)) for _ in range(dim[0] * dim[1])),
+        bytes(rng.choice((0, 255)) for _ in range(dim[0] * dim[1])),
     )
 
     x = (dim[0] - img.width) // 2
@@ -22,15 +27,17 @@ def pad_to_size(img: im.Image, dim: tuple[int, int]) -> im.Image:
 def retrieve_patterns(
     path: str,
     dim: tuple[int, int] | None = None,
+    seed: int | None = None,
 ) -> Iterable[tuple[np.ndarray, tuple[int, int]]]:
     open_file = lambda x: im.open(f"{path}/{x}").convert("L")
     patterns = defaultdict(list)
+    rng = np.random.default_rng(seed)
     shapes = {}
 
     for filename in os.listdir(path):
         with open_file(filename) as f:
             if dim:
-                f = pad_to_size(f, dim)
+                f = pad_to_size(f, dim, rng)
 
             data = np.array(f, dtype=int)
             data = 2 * (data > 127) - 1
@@ -45,10 +52,10 @@ def retrieve_patterns(
         yield np.array(Ps, dtype=int), shapes[n]
 
 
-def _random_map(p: np.ndarray, k: int, f: Callable[[int], int]):
+def flip_bytes(p: np.ndarray, k: int, seed: int | None = None) -> np.ndarray:
+    rng = np.random.default_rng(seed)
     idxs = list(range(len(p)))
-    random.shuffle(idxs)
-
+    rng.shuffle(idxs)
     p = p.copy()
     altered = 0
 
@@ -56,16 +63,12 @@ def _random_map(p: np.ndarray, k: int, f: Callable[[int], int]):
         if altered == k:
             break
 
-        fp = f(p[i])
+        fp = -p[i]
         if fp != p[i]:
             p[i] = fp
             altered += 1
 
     return p
-
-
-def flip_bytes(p: np.ndarray, k: int) -> np.ndarray:
-    return _random_map(p, k, lambda b: -b)
 
 
 def paint_bytes(p: np.ndarray, k: int, val: int) -> np.ndarray:

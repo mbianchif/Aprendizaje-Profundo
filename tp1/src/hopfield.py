@@ -12,21 +12,20 @@ class Hopfield:
         cls,
         p_error: float,
         n: int,
-        p_prov: Callable[[int, int, float], np.ndarray],
-        corr: float = 0.0,
+        p_prov: Callable[[int, int], np.ndarray],
     ) -> int:
         a, b = 1, n
-        best = 0
+        m = cls(n)
+        best = 1
 
         while a <= b:
             mid = (a + b) >> 1
 
-            m = cls(n)
-            P = p_prov(mid, n, corr)
+            P = p_prov(mid, n)
             m.train(P)
 
-            S = m._sign(P @ m.W)
-            e_total = np.sum(S != P) / (n * mid)
+            S = np.sign(P @ m.W)
+            e_total = np.mean(S != P)
 
             if e_total < p_error:
                 best = mid
@@ -41,7 +40,7 @@ class Hopfield:
         np.fill_diagonal(self.W, 0)
 
     def is_stable(self, p: np.ndarray) -> bool:
-        ss = self._sign(self.W @ p)
+        ss = np.sign(self.W @ p)
         return np.array_equal(ss, p)
 
     def recall(self, p: np.ndarray) -> tuple[np.ndarray, int]:
@@ -58,14 +57,8 @@ class Hopfield:
             steps += 1
 
             for i in idxs:
-                s = self._sign(self.W[i] @ p)
+                s = np.sign(self.W[i] @ p)
                 modified |= p[i] != s
                 p[i] = s
 
         return p, steps
-
-    def __len__(self) -> int:
-        return self.n
-
-    def _sign(self, x: np.ndarray) -> np.ndarray:
-        return np.where(x >= 0, 1, -1)
