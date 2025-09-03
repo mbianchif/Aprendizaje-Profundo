@@ -82,7 +82,7 @@ def all_linear_combs(P: np.ndarray) -> np.ndarray:
 
     def bt(res, acc):
         if (i := len(acc)) == n:
-            p = np.where(np.sum(acc, axis=0) >= 0, 1, -1)
+            p = np.where(np.sum(acc, axis=0) >= 0.0, 1, -1)
             res.append(p)
             return res
 

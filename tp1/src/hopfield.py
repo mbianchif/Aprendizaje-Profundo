@@ -10,9 +10,10 @@ class Hopfield:
     @classmethod
     def capacity(
         cls,
-        p_error: float,
         n: int,
+        p_error: float,
         p_prov: Callable[[int, int], np.ndarray],
+        mask: np.ndarray | None = None,
     ) -> int:
         a, b = 1, n
         m = cls(n)
@@ -24,7 +25,10 @@ class Hopfield:
             P = p_prov(mid, n)
             m.train(P)
 
-            S = np.sign(P @ m.W)
+            if mask is not None:
+                m.W *= mask
+
+            S = np.where(P @ m.W >= 0.0, 1, -1)
             e_total = np.mean(S != P)
 
             if e_total < p_error:
@@ -40,7 +44,7 @@ class Hopfield:
         np.fill_diagonal(self.W, 0)
 
     def is_stable(self, p: np.ndarray) -> bool:
-        ss = np.sign(self.W @ p)
+        ss = np.where(self.W @ p >= 0.0, 1, -1)
         return np.array_equal(ss, p)
 
     def recall(self, p: np.ndarray) -> tuple[np.ndarray, int]:
@@ -57,7 +61,7 @@ class Hopfield:
             steps += 1
 
             for i in idxs:
-                s = np.sign(self.W[i] @ p)
+                s = np.where(self.W[i] @ p >= 0.0, 1, -1)
                 modified |= p[i] != s
                 p[i] = s
 
