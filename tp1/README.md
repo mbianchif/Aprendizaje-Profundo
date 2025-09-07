@@ -22,25 +22,25 @@ El objetivo de estas guías es **comprender el funcionamiento, limitaciones y pr
 ## Extracción de Imágenes
 
 Para extraer las imágenes ejecutar:
-```sh
+```bash
 unzip images.zip -d images
 ```
 
 ## Ejecución del Notebook
 
 Para correr el notebook de forma local ejcutar:
-```sh
+```bash
 uv run jupyter notebook
 ```
 
 ## Dependencias
 - **unzip**: Para descomprimir las imágenes
-```sh
+```bash
 sudo apt install unzip  # ubuntu
 brew install unzip      # macOS
 ```
 
 - **uv**: Para ejecutar el notebook
-```sh
+```bash
 curl -LsSf https://astral.sh/uv/install.sh | sh # linux + macOS
 ```
