@@ -1,10 +1,9 @@
 import PIL.Image as im
 import numpy as np
-import random
 import os
 from collections import defaultdict
-from typing import Callable, Iterable
 from numpy.random import Generator
+from typing import Iterable
 
 
 def pad_to_size(
@@ -30,8 +29,8 @@ def retrieve_patterns(
     seed: int | None = None,
 ) -> Iterable[tuple[np.ndarray, tuple[int, int]]]:
     open_file = lambda x: im.open(f"{path}/{x}").convert("L")
-    patterns = defaultdict(list)
     rng = np.random.default_rng(seed)
+    patterns = defaultdict(list)
     shapes = {}
 
     for filename in os.listdir(path):
