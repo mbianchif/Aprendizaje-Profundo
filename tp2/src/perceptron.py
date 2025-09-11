@@ -3,9 +3,13 @@ import numpy as np
 
 
 class Perceptron:
-    def __init__(self, n: int):
-        self.W = np.zeros(shape=(n, 1))
-        self.B = 0.0
+    def __init__(self, n: int, seed: int | None = None):
+        rng = np.random.default_rng(seed)
+
+        self.W = rng.normal(loc=0.0, scale=0.1, size=n)
+        self.B = rng.normal(loc=0.0, scale=0.1)
+        self.rng = rng
+        self.n = n
 
     def forward(self, X: np.ndarray) -> np.ndarray:
         H = X @ self.W + self.B
@@ -13,18 +17,25 @@ class Perceptron:
         return Z
 
     def train(
-        self, X: np.ndarray, Y: np.ndarray, f: Callable[[Self], None], etha: float = 1.0
+        self,
+        X: np.ndarray,
+        Y: np.ndarray,
+        epoch_f: Callable[[Self], None] = lambda _: None,
+        eta: float = 0.5,
     ):
-        while True:
-            f(self)
-            Z = self.forward(X)
-            self.W += etha * X.T @ (Y - Z)
-            self.B += etha * np.sum(Y - Z)
+        idxs = np.arange(len(X))
+        epoch_f(self)
 
-            if self.mse(X, Y) == 0.0:
-                f(self)
-                break
+        while np.any(self.mse(X, Y) > 0.0):
+            self.rng.shuffle(idxs)
+
+            for i in idxs:
+                dyz = float(Y[i]) - self.forward(X[i])
+                self.W += eta * dyz * X[i]
+                self.B += eta * dyz
+
+            epoch_f(self)
 
     def mse(self, X: np.ndarray, Y: np.ndarray) -> float:
         Z = self.forward(X)
-        return 0.5 * np.sum(np.square(Y - Z))
+        return float(np.mean((Y.flatten() - Z) ** 2))
