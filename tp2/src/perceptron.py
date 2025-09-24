@@ -20,13 +20,15 @@ class Perceptron:
         self,
         X: np.ndarray,
         Y: np.ndarray,
+        max_iter: int = 100,
         epoch_f: Callable[[Self], None] = lambda _: None,
         eta: float = 0.5,
     ):
         idxs = np.arange(len(X))
         epoch_f(self)
+        epoch = 0
 
-        while np.any(self.mse(X, Y) > 0.0):
+        while epoch < max_iter and np.any(self.mse(X, Y) > 0.0):
             self.rng.shuffle(idxs)
 
             for i in idxs:
@@ -35,7 +37,30 @@ class Perceptron:
                 self.B += eta * dyz
 
             epoch_f(self)
+            epoch += 1
 
     def mse(self, X: np.ndarray, Y: np.ndarray) -> float:
         Z = self.forward(X)
         return float(np.mean((Y.flatten() - Z) ** 2))
+
+    @classmethod
+    def capacity(
+        cls,
+        n: int,
+        n_p: int,
+        n_t: int,
+        seed: int | None = None,
+        max_iter: int = 100,
+    ) -> float:
+        rng = np.random.default_rng(seed)
+        p = cls(n)
+        hits = 0
+
+        for _ in range(n_t):
+            X = rng.uniform(-1, 1, (n_p, n))
+            Y = rng.choice([-1, 1], n_p)
+
+            p.train(X, Y, max_iter=max_iter)
+            hits += int(p.mse(X, Y) == 0.0)
+
+        return hits / n_t
