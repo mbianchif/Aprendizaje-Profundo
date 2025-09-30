@@ -1,5 +1,5 @@
 import numpy as np
-from layer import Layer
+from src.layer import Layer
 
 
 class MLP:
@@ -13,38 +13,38 @@ class MLP:
 
         return X
 
-    def backward(self, Y: np.ndarray):
-        rest, last = self._layers[:-1], self._layers[-1]
+    def backward(self, Z: np.ndarray, Y: np.ndarray):
+        D = 2 * (Z - Y)
 
-        W, D = last.backward_last(Y)
-        for layer in reversed(rest):
-            W, D = layer.backward(W, D)
+        for layer in reversed(self._layers):
+            D = layer.backward(D)
 
-    def apply_deltas(self, lr: float):
+    def apply_deltas(self, lr: float, batch_size: int):
         for layer in self._layers:
-            layer.apply_delta(lr)
+            layer.apply_delta(lr, batch_size)
 
     def train(
         self,
         X: np.ndarray,
         Y: np.ndarray,
-        max_iter: int = 100,
-        lr: float = 0.1,
-        err: float = 0.05,
+        max_iter: int = 5000,
+        lr: float = 0.01,
+        err: float = 1e-4,
     ):
-        idxs = np.arange(len(X))
+        n = len(X)
+        idxs = np.arange(n)
 
-        for epoch in range(max_iter):
+        for _ in range(max_iter):
             self._rng.shuffle(idxs)
 
             for i in idxs:
-                self.forward(X[i])
-                self.backward(Y[i])
-                self.apply_deltas(lr / epoch)
+                Z = self.forward(X[i].reshape(1, -1))
+                self.backward(Z, Y[i].reshape(1, -1))
 
+            self.apply_deltas(lr, 4)
             Z = self.forward(X)
             if self.mse(Z, Y) <= err:
                 break
 
     def mse(self, Z: np.ndarray, Y: np.ndarray) -> float:
-        return float(0.5 * np.mean(Y.flatten() - Z.flatten()) ** 2)
+        return float(0.5 * np.mean((Z - Y) ** 2))
