@@ -1,10 +1,10 @@
 from typing import Callable, Optional
-import numpy as np
 from src.layer import Layer
+import numpy as np
 
 
 class MLP:
-    def __init__(self, arch: list[Layer], seed: int | None = None):
+    def __init__(self, arch: list[Layer], seed: Optional[int] = None):
         self._rng = np.random.default_rng(seed)
         self._layers = arch
 
@@ -38,9 +38,7 @@ class MLP:
         idxs = np.arange(n)
         batch_size = batch_size or n
 
-        Z = self.forward(X)
-        mse = self.mse(Z, Y)
-        epoch_f(mse)
+        epoch_f(self.mse(X, Y))
 
         for _ in range(max_iter):
             self._rng.shuffle(idxs)
@@ -54,12 +52,12 @@ class MLP:
 
                 self.apply_deltas(lr, end - start)
 
-            Z = self.forward(X)
-            mse = self.mse(Z, Y)
+            mse = self.mse(X, Y)
             epoch_f(mse)
 
             if mse <= err:
                 break
 
-    def mse(self, Z: np.ndarray, Y: np.ndarray) -> float:
+    def mse(self, X: np.ndarray, Y: np.ndarray) -> float:
+        Z = self.forward(X)
         return float(0.5 * np.mean((Z - Y) ** 2))
