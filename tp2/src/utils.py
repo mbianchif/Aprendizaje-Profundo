@@ -1,5 +1,12 @@
 import numpy as np
-from typing import Callable
+from typing import Callable, Generator
+
+
+def windows[T](arr: list[T], w: int) -> Generator[list[T]]:
+    n = len(arr)
+
+    for i in range(n - w + 1):
+        yield arr[i : i + w]
 
 
 def truth_table(n: int, f: Callable[[list[int]], int]) -> tuple[np.ndarray, np.ndarray]:
