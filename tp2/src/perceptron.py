@@ -1,9 +1,9 @@
-from typing import Callable, Self
+from typing import Callable, Self, Optional
 import numpy as np
 
 
 class Perceptron:
-    def __init__(self, n: int, seed: int | None = None):
+    def __init__(self, n: int, seed: Optional[int] = None):
         rng = np.random.default_rng(seed)
 
         self.W = rng.normal(loc=0.0, scale=0.1, size=n)
@@ -13,8 +13,7 @@ class Perceptron:
 
     def forward(self, X: np.ndarray) -> np.ndarray:
         H = X @ self.W + self.B
-        Z = np.where(H >= 0, 1, -1)
-        return Z
+        return np.where(H >= 0, 1, -1)
 
     def train(
         self,
@@ -22,7 +21,7 @@ class Perceptron:
         Y: np.ndarray,
         max_iter: int = 100,
         epoch_f: Callable[[Self], None] = lambda _: None,
-        eta: float = 0.5,
+        lr: float = 0.5,
     ):
         idxs = np.arange(len(X))
         epoch_f(self)
@@ -33,15 +32,14 @@ class Perceptron:
 
             for i in idxs:
                 dyz = float(Y[i]) - self.forward(X[i])
-                self.W += eta * dyz * X[i]
-                self.B += eta * dyz
+                self.W += lr * dyz * X[i]
+                self.B += lr * dyz
 
             epoch_f(self)
             epoch += 1
 
     def mse(self, X: np.ndarray, Y: np.ndarray) -> float:
-        Z = self.forward(X)
-        return float(np.mean((Y.flatten() - Z) ** 2))
+        return float(np.mean((self.forward(X) - Y.flatten()) ** 2))
 
     @classmethod
     def capacity(
@@ -49,7 +47,7 @@ class Perceptron:
         n: int,
         n_p: int,
         n_t: int,
-        seed: int | None = None,
+        seed: Optional[int] = None,
         max_iter: int = 100,
     ) -> float:
         rng = np.random.default_rng(seed)

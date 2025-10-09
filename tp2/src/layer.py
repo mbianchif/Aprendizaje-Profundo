@@ -1,9 +1,14 @@
 from abc import ABC, abstractmethod
 import numpy as np
+from numpy.random import Generator
 
 
 class Layer(ABC):
     @abstractmethod
+    def init(self, rng: Generator):
+        pass
+
+    @abstractmethod
     def forward(self, X: np.ndarray) -> np.ndarray:
         pass
 
@@ -12,54 +17,46 @@ class Layer(ABC):
         pass
 
     @abstractmethod
-    def apply_delta(self, lr: float, batch_size: int):
+    def apply_delta(self, lr: float):
         pass
 
 
 class Tanh(Layer):
-    def __init__(self, m: int):
-        self.Y = np.zeros((1, m))
+    def __init__(self, a: float = 1.0):
+        self.a = a
+
+    def init(self, rng: Generator):
+        pass
 
     def forward(self, X: np.ndarray) -> np.ndarray:
         self.Y = np.tanh(X)
-        return self.Y
+        return self.Y * self.a
 
     def backward(self, D: np.ndarray) -> np.ndarray:
-        dZ = 1 - self.Y**2
-        return D * dZ
+        return D * self.a * (1 - self.Y**2)
 
-    def apply_delta(self, lr: float, batch_size: int):
+    def apply_delta(self, lr: float):
         pass
 
 
 class Dense(Layer):
-    def __init__(
-        self,
-        n: int,
-        m: int,
-        seed: int | None = None,
-    ):
-        rng = np.random.default_rng(seed)
+    def __init__(self, n: int, m: int):
+        self.n, self.m = n, m
 
-        self.X = np.zeros((1, n))
-        self.W = rng.normal(loc=0, scale=0.1, size=(n, m))
-        self.B = rng.normal(loc=0, scale=0.1, size=(1, m))
-
-        self.dW = np.zeros_like(self.W)
-        self.dB = np.zeros_like(self.B)
+    def init(self, rng: Generator):
+        limit = 6 / (self.n + self.m)
+        self.W = rng.uniform(-limit, limit, size=(self.n, self.m))
+        self.B = np.zeros((1, self.m))
 
     def forward(self, X: np.ndarray) -> np.ndarray:
         self.X = X
         return X @ self.W + self.B
 
     def backward(self, D: np.ndarray) -> np.ndarray:
-        self.dW += self.X.T @ D
-        self.dB += np.sum(D, axis=0)
+        self.dW = self.X.T @ D / len(D)
+        self.dB = np.mean(D, axis=0, keepdims=True)
         return D @ self.W.T
 
-    def apply_delta(self, lr: float, batch_size: int):
-        k = lr / batch_size
-        self.W -= k * self.dW
-        self.B -= k * self.dB
-        self.dW.fill(0)
-        self.dB.fill(0)
+    def apply_delta(self, lr: float):
+        self.W -= lr * self.dW
+        self.B -= lr * self.dB

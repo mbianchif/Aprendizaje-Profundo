@@ -1,4 +1,4 @@
-from typing import Callable, Optional
+from typing import Callable, Optional, Self
 from src.layer import Layer
 import numpy as np
 
@@ -6,6 +6,10 @@ import numpy as np
 class MLP:
     def __init__(self, arch: list[Layer], seed: Optional[int] = None):
         self._rng = np.random.default_rng(seed)
+
+        for layer in arch:
+            layer.init(self._rng)
+
         self._layers = arch
 
     def forward(self, X: np.ndarray) -> np.ndarray:
@@ -15,14 +19,14 @@ class MLP:
         return X
 
     def backward(self, Z: np.ndarray, Y: np.ndarray):
-        D = 2 * (Z - Y)
+        D = 2 * (Z - Y) / len(Y)
 
         for layer in reversed(self._layers):
             D = layer.backward(D)
 
-    def apply_deltas(self, lr: float, batch_size: int):
+    def apply_deltas(self, lr: float):
         for layer in self._layers:
-            layer.apply_delta(lr, batch_size)
+            layer.apply_delta(lr)
 
     def train(
         self,
@@ -32,13 +36,13 @@ class MLP:
         max_iter: int = 5000,
         lr: float = 0.01,
         err: float = 1e-4,
-        epoch_f: Callable[[float], None] = lambda _: None,
+        epoch_f: Callable[[Self], None] = lambda _: None,
     ):
         n = len(X)
         idxs = np.arange(n)
         batch_size = batch_size or n
 
-        epoch_f(self.mse(X, Y))
+        epoch_f(self)
 
         for _ in range(max_iter):
             self._rng.shuffle(idxs)
@@ -46,18 +50,14 @@ class MLP:
             for start in range(0, n, batch_size):
                 end = min(start + batch_size, n)
 
-                for i in (idxs[i] for i in range(start, end)):
-                    Z = self.forward(X[i].reshape(1, -1))
-                    self.backward(Z, Y[i].reshape(1, -1))
+                Z = self.forward(X[start:end])
+                self.backward(Z, Y[start:end])
+                self.apply_deltas(lr)
 
-                self.apply_deltas(lr, end - start)
+            epoch_f(self)
 
-            mse = self.mse(X, Y)
-            epoch_f(mse)
-
-            if mse <= err:
+            if self.mse(X, Y) <= err:
                 break
 
     def mse(self, X: np.ndarray, Y: np.ndarray) -> float:
-        Z = self.forward(X)
-        return float(0.5 * np.mean((Z - Y) ** 2))
+        return float(np.mean((self.forward(X) - Y) ** 2))
