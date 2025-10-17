@@ -49,9 +49,10 @@ class MLP:
 
             for start in range(0, n, batch_size):
                 end = min(start + batch_size, n)
+                batch = idxs[start:end]
 
-                Z = self.forward(X[start:end])
-                self.backward(Z, Y[start:end])
+                Z = self.forward(X[batch])
+                self.backward(Z, Y[batch])
                 self.apply_deltas(lr)
 
             epoch_f(self)
