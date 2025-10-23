@@ -39,6 +39,21 @@ class Tanh(Layer):
         pass
 
 
+class SoftMax(Layer):
+    def init(self, rng: Generator):
+        pass
+
+    def forward(self, X: np.ndarray) -> np.ndarray:
+        exp_x = np.exp(X - X.max())
+        return exp_x / exp_x.sum()
+
+    def backward(self, D: np.ndarray) -> np.ndarray:
+        return D
+
+    def apply_delta(self, lr: float):
+        pass
+
+
 class Dense(Layer):
     def __init__(self, n: int, m: int):
         self.n, self.m = n, m

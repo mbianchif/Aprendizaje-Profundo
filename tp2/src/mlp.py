@@ -4,8 +4,14 @@ import numpy as np
 
 
 class MLP:
-    def __init__(self, arch: list[Layer], seed: Optional[int] = None):
+    def __init__(
+        self,
+        arch: list[Layer],
+        err_f: Callable[[Self, np.ndarray, np.ndarray], float],
+        seed: Optional[int] = None,
+    ):
         self._rng = np.random.default_rng(seed)
+        self._err_f = err_f
 
         for layer in arch:
             layer.init(self._rng)
@@ -19,7 +25,7 @@ class MLP:
         return X
 
     def backward(self, Z: np.ndarray, Y: np.ndarray):
-        D = 2 * (Z - Y) / len(Y)
+        D = (Z - Y) / len(Y)
 
         for layer in reversed(self._layers):
             D = layer.backward(D)
@@ -57,8 +63,8 @@ class MLP:
 
             epoch_f(self)
 
-            if self.mse(X, Y) <= err:
+            if self.error(X, Y) <= err:
                 break
 
-    def mse(self, X: np.ndarray, Y: np.ndarray) -> float:
-        return float(np.mean((self.forward(X) - Y) ** 2))
+    def error(self, X: np.ndarray, Y: np.ndarray) -> float:
+        return self._err_f(self, X, Y)
