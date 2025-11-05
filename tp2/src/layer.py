@@ -20,6 +20,27 @@ class Layer(ABC):
     def apply_delta(self, lr: float):
         pass
 
+    @abstractmethod
+    def parameters(self) -> tuple[np.ndarray, np.ndarray]:
+        pass
+
+
+class Step(Layer):
+    def init(self, rng: Generator):
+        pass
+
+    def forward(self, X: np.ndarray) -> np.ndarray:
+        return np.where(X >= 0, 1, -1)
+
+    def backward(self, D: np.ndarray) -> np.ndarray:
+        raise ValueError("Can't backward through non differentiable function")
+
+    def apply_delta(self, lr: float):
+        pass
+
+    def parameters(self) -> tuple[np.ndarray, np.ndarray]:
+        return np.array([], dtype=np.float64), np.array([], dtype=np.float64)
+
 
 class Tanh(Layer):
     def __init__(self, a: float = 1.0):
@@ -38,6 +59,9 @@ class Tanh(Layer):
     def apply_delta(self, lr: float):
         pass
 
+    def parameters(self) -> tuple[np.ndarray, np.ndarray]:
+        return np.array([], dtype=np.float64), np.array([], dtype=np.float64)
+
 
 class SoftMax(Layer):
     def init(self, rng: Generator):
@@ -52,6 +76,9 @@ class SoftMax(Layer):
 
     def apply_delta(self, lr: float):
         pass
+
+    def parameters(self) -> tuple[np.ndarray, np.ndarray]:
+        return np.array([], dtype=np.float64), np.array([], dtype=np.float64)
 
 
 class Dense(Layer):
@@ -75,3 +102,6 @@ class Dense(Layer):
     def apply_delta(self, lr: float):
         self.W -= lr * self.dW
         self.B -= lr * self.dB
+
+    def parameters(self) -> tuple[np.ndarray, np.ndarray]:
+        return self.W, self.B

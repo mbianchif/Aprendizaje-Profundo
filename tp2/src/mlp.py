@@ -66,5 +66,48 @@ class MLP:
             if self.error(X, Y) <= err:
                 break
 
+    def train_simulated_annealing(
+        self,
+        X: np.ndarray,
+        Y: np.ndarray,
+        sigma: float,
+        alpha: float,
+        t: float,
+        max_iter: int = 1000,
+        epoch_f: Callable[[Self], None] = lambda _: None,
+    ):
+        def advance(err: float, i: int = 0) -> bool:
+            if i == len(self._layers):
+                delta_err = self.error(X, Y) - err
+
+                if delta_err <= 0.0:
+                    return True
+
+                keep = self._rng.uniform(0, 1, 1) < np.exp(-delta_err / t)
+                return keep
+
+            W, B = self._layers[i].parameters()
+
+            dW = self._rng.normal(loc=0, scale=sigma, size=W.shape)
+            dB = self._rng.normal(loc=0, scale=sigma, size=B.shape)
+
+            W += dW
+            B += dB
+
+            keep = advance(err, i + 1)
+            if not keep:
+                W -= dW
+                B -= dB
+
+            return keep
+
+        epoch_f(self)
+
+        for _ in range(max_iter):
+            err = self.error(X, Y)
+            advance(err)
+            t *= alpha
+            epoch_f(self)
+
     def error(self, X: np.ndarray, Y: np.ndarray) -> float:
         return self._err_f(self, X, Y)
