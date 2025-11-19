@@ -22,7 +22,7 @@ def uniform_square(
     seed: Optional[int] = None,
 ) -> np.ndarray:
     rng = np.random.default_rng(seed)
-    a, b = -side_length / 2, side_length / 2
+    a, b = 0, side_length
     samples = []
 
     for _ in range(n):
