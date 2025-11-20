@@ -16,10 +16,13 @@ class Kohonen:
         ],
         seed: Optional[int] = None,
     ):
-        shape = (*shape, n)
-        self._rng = np.random.default_rng(seed)
-        self.R = self._rng.uniform(-1, 1, size=shape)
+        self._units_shape = shape
+        self._coords = np.indices(shape)
+        self._dist_buf = np.zeros(shape, dtype=float)
         self._dist_f = dist_f
+
+        self._rng = np.random.default_rng(seed)
+        self.R = self._rng.normal(0, 1, size=(*shape, n))
 
     def _find_bmu(self, x: np.ndarray) -> tuple[np.intp, ...]:
         diff = self.R - x
@@ -33,17 +36,9 @@ class Kohonen:
         eta: float,
         sigma: float,
     ):
-        unit_dim = self.R.shape[:-1]
-        coords = np.indices(unit_dim)
-        dist = np.zeros(unit_dim)
-        self._dist_f(dist, coords, bmu_idx)
-
-        # dist2 = np.zeros(self.R.shape[:-1])
-        # for i, c in enumerate(coords):
-        #     dist2 += (c - bmu_idx[i]) ** 2
-
-        v = np.exp(-dist / (2 * sigma**2))[..., np.newaxis]
-        self.R += eta * v * (x - self.R)
+        self._dist_f(self._dist_buf, self._coords, bmu_idx)
+        neigh = np.exp(-self._dist_buf / (2 * (sigma**2)))[..., np.newaxis]
+        self.R += eta * neigh * (x - self.R)
 
     def component_arrays(self) -> tuple[np.ndarray, ...]:
         return tuple(self.R[..., i].copy() for i in range(self.R.shape[-1]))
@@ -52,24 +47,28 @@ class Kohonen:
         self,
         X: np.ndarray,
         eta0: float = 0.1,
-        max_iter: int = 10000,
+        etaf: float = 0.05,
         sigma0: Optional[float] = None,
+        sigmaf: float = 0.05,
+        max_iter: int = 10000,
         epoch_f: Callable[[Self], None] = lambda _: None,
+        f_calls: int = 100,
     ):
-        if sigma0 is None:
-            sigma0 = max(self.R.shape[:-1]) / 2
-
         epoch_f(self)
 
-        tau = max_iter / np.log(len(X))
+        n = len(X)
+        call_div = max_iter // f_calls
+
+        if sigma0 is None or sigma0 <= 1:
+            sigma0 = max(self._units_shape) / 2
 
         for t in range(max_iter):
-            decay_factor = np.exp(-t / tau)
-            eta = decay_factor * eta0
-            sigma = decay_factor * sigma0
+            sigma = sigma0 * (sigmaf / sigma0) ** (t / max_iter)
+            eta = eta0 * (etaf / eta0) ** (t / max_iter)
 
-            for x in X:
-                bmu_idx = self._find_bmu(x)
-                self._update(x, bmu_idx, eta, sigma)
+            x = X[self._rng.integers(0, n)]
+            bmu_idx = self._find_bmu(x)
+            self._update(x, bmu_idx, eta, sigma)
 
-            epoch_f(self)
+            if t % call_div == 0:
+                epoch_f(self)

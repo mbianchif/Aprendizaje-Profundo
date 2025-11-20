@@ -7,8 +7,8 @@ def uniform_circle(n: int, radius: float, seed: Optional[int] = None) -> np.ndar
     samples = []
 
     for _ in range(n):
-        r = rng.uniform(0, radius)
-        theta = rng.uniform(0, 360)
+        r = radius * np.sqrt(rng.uniform(0, 1))
+        theta = rng.uniform(0, 2 * np.pi)
         x = r * np.cos(theta)
         y = r * np.sin(theta)
         samples.append((x, y))
@@ -28,6 +28,27 @@ def uniform_square(
     for _ in range(n):
         x = rng.uniform(a, b)
         y = rng.uniform(a, b)
+        samples.append((x, y))
+
+    return np.array(samples)
+
+
+def noisy_circunference(
+    n: int,
+    radius: float,
+    radius_noise_percentage: float,
+    seed: Optional[int] = None,
+) -> np.ndarray:
+    rng = np.random.default_rng(seed)
+    a = radius * (1 - radius_noise_percentage)
+    b = radius * (1 + radius_noise_percentage)
+    samples = []
+
+    for t in range(n):
+        theta = 2 * np.pi * t / n
+        r = rng.uniform(a, b)
+        x = r * np.cos(theta)
+        y = r * np.sin(theta)
         samples.append((x, y))
 
     return np.array(samples)
