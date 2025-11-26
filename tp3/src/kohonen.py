@@ -1,5 +1,7 @@
 import numpy as np
 from typing import Callable, Optional, Self
+from itertools import product
+from scipy.ndimage import shift
 
 
 class Kohonen:
@@ -42,6 +44,26 @@ class Kohonen:
 
     def component_arrays(self) -> tuple[np.ndarray, ...]:
         return tuple(self.R[..., i].copy() for i in range(self.R.shape[-1]))
+
+    def u_matrix(self) -> np.ndarray:
+        U = np.zeros(self._units_shape, dtype=float)
+        counts = np.zeros(self._units_shape, dtype=int)
+
+        n = len(self._units_shape)
+        offsets = (offset for offset in product((-1, 0, 1), repeat=n) if any(x != 0 for x in offset))
+
+        for offset in offsets:
+            Rn = shift(self.R, shift=(*offset, 0), order=0, mode="constant", cval=np.nan)
+            valid = ~np.isnan(Rn).any(axis=-1)
+
+            dist = np.zeros(self._units_shape)
+            diff = self.R - np.nan_to_num(Rn, nan=0.0)
+            dist[valid] = np.linalg.norm(diff[valid], axis=-1)
+
+            U += dist
+            counts[valid] += 1
+
+        return np.divide(U, counts, out=np.zeros_like(U), where=counts > 0)
 
     def train(
         self,
