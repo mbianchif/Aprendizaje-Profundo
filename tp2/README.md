@@ -77,7 +77,3 @@ brew install unzip      # macOS
 ```bash
 curl -LsSf https://astral.sh/uv/install.sh | sh # linux + macOS
 ```
-
----
-
-If you want, I can also generate a short English version, add images, include badges, or format the README more like an academic report.
