@@ -33,7 +33,7 @@ El objetivo de estas guías es **comprender el funcionamiento, las propiedades e
 Para extraer las imágenes ejecutar:
 
 ```bash
-unzip images.zip -d images
+unzip data.zip -d data
 ```
 
 ## Ejecución del Notebook
