@@ -30,7 +30,7 @@ El objetivo de estas guías es **comprender el funcionamiento, las propiedades e
 
 ## Extracción de Imágenes
 
-Para extraer las imágenes ejecutar:
+Para extraer los datos ejecutar:
 
 ```bash
 unzip data.zip -d data
