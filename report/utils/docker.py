@@ -28,7 +28,7 @@ class Docker:
         BASE_PORT = 40_000
         return [f"node-{i}:{BASE_PORT + i}" for i in range(nodes)]
 
-    def compose_down(self):
+    def compose_down(self) -> None:
         """
         Drops the running containers.
         """

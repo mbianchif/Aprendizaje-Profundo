@@ -1,8 +1,9 @@
-from pathlib import Path
 import orchestra
 import time
 import json
 from dataclasses import dataclass, asdict
+from pathlib import Path
+from random import Random
 from typing import Callable, Any
 
 from orchestra import PyTrainingConfig, TrainedModel
@@ -29,7 +30,7 @@ def __timed(f: Callable[[], Any]) -> tuple[Any, float]:
     return res, round((end - start) / 1e9, 2)
 
 
-def __save_training_results(trained_model: TrainedModel, secs_taken: float, name: str, file_name: str):
+def __save_training_results(trained_model: TrainedModel, secs_taken: float, name: str, file_name: str) -> None:
     """
     Saves the results of a training session to disk.
     """
@@ -51,20 +52,27 @@ def __save_training_results(trained_model: TrainedModel, secs_taken: float, name
         json.dump(asdict(session_result), f, indent=4, sort_keys=True)
 
 
-def exec_training(name: str, training: PyTrainingConfig, times: int):
+def exec_training(
+    name: str,
+    training_config_factory: Callable[[int], PyTrainingConfig],
+    repeats: int,
+    rng: Random,
+) -> None:
     """
     Executes training sessions saving the results to disk.
     """
     model = build_lenet5_model_config()
 
-    for i in range(times):
-        session = orchestra.orchestrate(model, training)
+    for i in range(1 + repeats):
+        seed = rng.randint(0, 2**32 - 1)
+        training_config = training_config_factory(seed)
+        session = orchestra.orchestrate(model, training_config)
         trained_model, secs_taken = __timed(lambda: session.wait())
         __save_training_results(trained_model, secs_taken, name, str(i))
 
 
 def should_train() -> bool:
     """
-    Looks for past training data, if there is none, returns `True` or `False` otherwise.
+    Looks for past training data, if there is none returns `True`, or `False` otherwise.
     """
     return not SESSIONS_DIR.exists()

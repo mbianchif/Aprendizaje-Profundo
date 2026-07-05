@@ -36,6 +36,7 @@ def build_mnist_parameter_server_training_config(
     addrs: list[str],
     nservers: int,
     offline_epochs: int,
+    seed: int,
 ) -> PyTrainingConfig:
     """
     Builds a training configuration for a Parameter Server setup
@@ -44,9 +45,10 @@ def build_mnist_parameter_server_training_config(
     return orchestra.parameter_server(
         addrs=addrs,
         nservers=nservers,
+        offline_epochs=offline_epochs,
+        seed=seed,
         sync=BarrierSync(),
         store=BlockingStore(),
-        offline_epochs=offline_epochs,
         **__get_common_training_config_params(),
     )
 
@@ -54,6 +56,7 @@ def build_mnist_parameter_server_training_config(
 def build_mnist_all_reduce_training_config(
     addrs: list[str],
     offline_epochs: int,
+    seed: int,
 ) -> PyTrainingConfig:
     """
     Builds a training configuration for an All Reduce setup.
@@ -61,5 +64,6 @@ def build_mnist_all_reduce_training_config(
     return orchestra.all_reduce(
         addrs=addrs,
         offline_epochs=offline_epochs,
+        seed=seed,
         **__get_common_training_config_params(),
     )
