@@ -25,7 +25,7 @@ def __get_common_training_config_params() -> dict:
             eps=1e-8,
         ),
         "loss_fn": CrossEntropy(),
-        "max_epochs": 64,
+        "max_epochs": 2,
         "batch_size": 48,
     }
 

@@ -1,22 +1,22 @@
 from pathlib import Path
-from tarfile import TarInfo
 import orchestra
 import time
 import json
-from dataclasses import dataclass
+from dataclasses import dataclass, asdict
 from typing import Callable, Any
 
 from orchestra import PyTrainingConfig, TrainedModel
 
 from utils.model import build_lenet5_model_config
 
-SESSIONS_DIR = "sessions"
+SESSIONS_DIR = Path("sessions")
 
 
 @dataclass
 class SessionResult:
-    trained_model: TrainedModel
-    ms_taken: float
+    secs_taken: float
+    safetensors_path: str
+    loss_history: list[float]
 
 
 def __timed(f: Callable[[], Any]) -> tuple[Any, float]:
@@ -26,19 +26,29 @@ def __timed(f: Callable[[], Any]) -> tuple[Any, float]:
     start = time.time_ns()
     res = f()
     end = time.time_ns()
-    return res, (end - start) / 1e-6
+    return res, round((end - start) / 1e9, 2)
 
 
-def __save_training_results(train_session_result: SessionResult, name: str, file_name: str):
+def __save_training_results(trained_model: TrainedModel, secs_taken: float, name: str, file_name: str):
     """
     Saves the results of a training session to disk.
     """
-    NAME_DIR = f"{SESSIONS_DIR}/{name}"
-    train_session_result_path = f"{NAME_DIR}/{file_name}.json"
-    Path(train_session_result_path).parent.mkdir(parents=True, exist_ok=True)
+    NAME_DIR = SESSIONS_DIR / name
+    NAME_DIR.mkdir(parents=True, exist_ok=True)
 
-    with open(train_session_result_path, "w") as f:
-        json.dump(train_session_result, f)
+    safetensors_path = f"{NAME_DIR}/{file_name}.safetensors"
+    session_result_path = f"{NAME_DIR}/{file_name}.json"
+
+    session_result = SessionResult(
+        secs_taken=secs_taken,
+        safetensors_path=safetensors_path,
+        loss_history=trained_model.loss_history(),
+    )
+
+    trained_model.save_safetensors(safetensors_path)
+
+    with open(session_result_path, "w") as f:
+        json.dump(asdict(session_result), f, indent=4, sort_keys=True)
 
 
 def exec_training(name: str, training: PyTrainingConfig, times: int):
@@ -49,9 +59,8 @@ def exec_training(name: str, training: PyTrainingConfig, times: int):
 
     for i in range(times):
         session = orchestra.orchestrate(model, training)
-        trained_model, ms_taken = __timed(lambda: session.wait())
-        train_session_result = SessionResult(trained_model, ms_taken)
-        __save_training_results(train_session_result, name, str(i))
+        trained_model, secs_taken = __timed(lambda: session.wait())
+        __save_training_results(trained_model, secs_taken, name, str(i))
 
 
 def should_train(confirm: bool) -> bool:
@@ -61,4 +70,4 @@ def should_train(confirm: bool) -> bool:
     if not confirm:
         print("Confirmation flag is set to False")
 
-    return confirm and not Path(SESSIONS_DIR).exists()
+    return confirm and not SESSIONS_DIR.exists()

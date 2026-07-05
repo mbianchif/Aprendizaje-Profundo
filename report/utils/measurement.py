@@ -1,8 +1,7 @@
-from functools import cache
 import json
 import statistics
 from dataclasses import dataclass
-from pathlib import Path
+from functools import cache
 
 import torch
 import numpy as np
@@ -16,8 +15,8 @@ from utils.session import SessionResult, SESSIONS_DIR
 class Measurement:
     acc_avg: float
     acc_std_dev: float
-    ms_taken_avg: float
-    ms_taken_std_dev: float
+    secs_taken_avg: float
+    secs_taken_std_dev: float
     loss_history_avgs: list[float]
     loss_history_std_devs: list[float]
 
@@ -26,13 +25,13 @@ def __retrieve_training_results(name: str) -> list[SessionResult]:
     """
     Retrieves the training results for a given training session name.
     """
-    NAME_DIR = f"{SESSIONS_DIR}/{name}"
-    persisted_results = Path(NAME_DIR).iterdir()
+    NAME_DIR = SESSIONS_DIR / name
     results = []
 
-    for result_path in sorted(persisted_results):
+    for result_path in sorted(NAME_DIR.glob("*.json")):
         with open(result_path, "r") as f:
-            results.append(json.load(f))
+            data = json.load(f)
+            results.append(SessionResult(**data))
 
     return results
 
@@ -56,9 +55,7 @@ def __calculate_accuracies(results: list[SessionResult]) -> list[float]:
     accuracies = []
 
     for result in results:
-        safetensors_path = "model.safetensors.tmp"
-        result.trained_model.save_safetensors(safetensors_path)
-        model = load_lenet5_from_safetensors(safetensors_path)
+        model = load_lenet5_from_safetensors(result.safetensors_path)
 
         with torch.no_grad():
             accuracy = (model(xt).argmax(dim=1) == yt).float().mean().item()
@@ -68,13 +65,12 @@ def __calculate_accuracies(results: list[SessionResult]) -> list[float]:
 
 
 def __calculate_times_taken(results: list[SessionResult]) -> list[float]:
-    return [result.ms_taken for result in results]
+    return [result.secs_taken for result in results]
 
 
 def __calculate_loss_histories(results: list[SessionResult]) -> list[list[float]]:
-    loss_histories = [result.trained_model.loss_history() for result in results]
-
-    agg_loss_histories = []
+    loss_histories = [result.loss_history for result in results]
+    grouped_loss_histories = []
     i = 0
 
     while True:
@@ -87,9 +83,10 @@ def __calculate_loss_histories(results: list[SessionResult]) -> list[list[float]
         if not epoch_losses:
             break
 
+        grouped_loss_histories.append(epoch_losses)
         i += 1
 
-    return agg_loss_histories
+    return grouped_loss_histories
 
 
 def measure_training_results(name: str) -> Measurement:
@@ -101,9 +98,9 @@ def measure_training_results(name: str) -> Measurement:
     acc_avg = statistics.mean(accs)
     acc_std_dev = statistics.stdev(accs)
 
-    ms_takens = __calculate_times_taken(results)
-    ms_taken_avg = statistics.mean(ms_takens)
-    ms_taken_std_dev = statistics.stdev(ms_takens)
+    secs_taken = __calculate_times_taken(results)
+    secs_taken_avg = statistics.mean(secs_taken)
+    secs_taken_std_dev = statistics.stdev(secs_taken)
 
     loss_histories = __calculate_loss_histories(results)
     loss_history_avgs = [statistics.mean(lh) for lh in loss_histories]
@@ -112,8 +109,8 @@ def measure_training_results(name: str) -> Measurement:
     return Measurement(
         acc_avg,
         acc_std_dev,
-        ms_taken_avg,
-        ms_taken_std_dev,
+        secs_taken_avg,
+        secs_taken_std_dev,
         loss_history_avgs,
         loss_history_std_devs,
     )

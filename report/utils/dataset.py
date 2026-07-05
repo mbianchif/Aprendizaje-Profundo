@@ -4,7 +4,7 @@ import subprocess
 from orchestra.datasets import LocalDataset
 
 
-DOWNLOAD_DIR = "dtasets"
+DOWNLOAD_DIR = "datasets"
 MNIST_DATASET_DIR = f"{DOWNLOAD_DIR}/mnist"
 
 
