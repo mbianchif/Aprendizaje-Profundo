@@ -3,7 +3,6 @@ import time
 import json
 from dataclasses import dataclass, asdict
 from pathlib import Path
-from random import Random
 from typing import Callable, Any
 
 from orchestra import PyTrainingConfig, TrainedModel
@@ -52,23 +51,14 @@ def __save_training_results(trained_model: TrainedModel, secs_taken: float, name
         json.dump(asdict(session_result), f, indent=4, sort_keys=True)
 
 
-def exec_training(
-    name: str,
-    training_config_factory: Callable[[int], PyTrainingConfig],
-    repeats: int,
-    rng: Random,
-) -> None:
+def exec_training(name: str, training_config: PyTrainingConfig, iteration: int) -> None:
     """
     Executes training sessions saving the results to disk.
     """
     model = build_lenet5_model_config()
-
-    for i in range(1 + repeats):
-        seed = rng.randint(0, 2**32 - 1)
-        training_config = training_config_factory(seed)
-        session = orchestra.orchestrate(model, training_config)
-        trained_model, secs_taken = __timed(lambda: session.wait())
-        __save_training_results(trained_model, secs_taken, name, str(i))
+    session = orchestra.orchestrate(model, training_config)
+    trained_model, secs_taken = __timed(lambda: session.wait())
+    __save_training_results(trained_model, secs_taken, name, str(iteration))
 
 
 def should_train() -> bool:

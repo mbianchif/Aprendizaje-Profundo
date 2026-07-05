@@ -1,4 +1,3 @@
-import getpass
 import subprocess
 import sys
 from pathlib import Path
@@ -22,8 +21,7 @@ class Docker:
         if release:
             args.append("--release")
 
-        pwd = getpass.getpass("[sudo] Password for writing simulated node addresses to the /etc/hosts file: ")
-        subprocess.run(args=args, input=(pwd + "\n").encode())
+        subprocess.run(args=args)
 
         BASE_PORT = 40_000
         return [f"node-{i}:{BASE_PORT + i}" for i in range(nodes)]

@@ -14,7 +14,6 @@ def get_mnist_dataset() -> LocalDataset:
     and returns a `LocalDataset` instance pointing to that
     dataset.
     """
-
     if not path.exists(MNIST_DATASET_DIR):
         TARGET_URL = "https://drive.google.com/uc?export=download&id=18kPPrx97omjSkVltx_INglQPvylsbhbI"
         ZIP_DOWNLOAD_PATH = f"{DOWNLOAD_DIR}/mnist.zip"

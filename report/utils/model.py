@@ -1,3 +1,5 @@
+from functools import cache
+
 from orchestra import Sequential
 from orchestra.activations import Softmax, Tanh
 from orchestra.arch import Conv2d, Dense, MaxPooling
@@ -66,6 +68,7 @@ def load_lenet5_from_safetensors(safetensors_path: str) -> nn.Module:
     return model
 
 
+@cache
 def build_lenet5_model_config() -> Sequential:
     """
     Builds a model configuration with Lenet5's paper architecture.

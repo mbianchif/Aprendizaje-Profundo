@@ -26,7 +26,7 @@ def __get_common_training_config_params() -> dict:
             eps=1e-8,
         ),
         "loss_fn": CrossEntropy(),
-        "max_epochs": 32,
+        "max_epochs": 48,
         "batch_size": 64,
         "serializer": SparseSerializer(r=0.5),
     }

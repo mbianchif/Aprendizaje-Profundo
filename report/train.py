@@ -1,6 +1,6 @@
-import random
 from dataclasses import dataclass
 from itertools import product
+from random import Random
 from typing import Self, Callable
 
 from orchestra import PyTrainingConfig
@@ -59,17 +59,15 @@ class SessionConfig:
         )
 
 
-INITIAL_SEED = 67
-
 # Key system parameters to measure.
 NODES = [6, 8, 10]
-OFFLINE_EPOCHS = [0, 1, 2]
+OFFLINE_EPOCHS = [0, 2, 4]
 REPEATS = 1
 
 SESSIONS = [
     factory(nodes, offline_epochs)
-    for factory in (SessionConfig.all_reduce, SessionConfig.parameter_server)
     for nodes, offline_epochs in product(NODES, OFFLINE_EPOCHS)
+    for factory in (SessionConfig.all_reduce, SessionConfig.parameter_server)
 ]
 
 
@@ -78,16 +76,16 @@ def main() -> None:
         print("There are past measurements, delete the 'sessions' directory and retry")
         return
 
-    rng = random.Random(INITIAL_SEED)
+    rng = Random(67)
+    seeds = [rng.randint(0, 2**32 - 1) for _ in range(1 + REPEATS)]
     docker = Docker(ono_project_root="~/fiuba/tpp")
 
     for session in SESSIONS:
-        addrs = docker.compose_up(nodes=session.nodes, release=True)
+        addrs = docker.compose_up(session.nodes, release=True)
 
-        def training_config_factory(seed: int) -> PyTrainingConfig:
-            return session.config_builder(addrs, seed)
-
-        exec_training(session.name, training_config_factory, REPEATS, rng)
+        for i, seed in enumerate(seeds):
+            training_config = session.config_builder(addrs, seed)
+            exec_training(session.name, training_config, i)
 
     docker.compose_down()
 
