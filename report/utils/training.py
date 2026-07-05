@@ -4,6 +4,7 @@ from orchestra.loss_fns import CrossEntropy
 from orchestra.optimizers import Adam
 from orchestra.store import BlockingStore
 from orchestra.sync import BarrierSync
+from orchestra.serializer import SparseSerializer
 
 from utils.dataset import get_mnist_dataset
 
@@ -25,8 +26,10 @@ def __get_common_training_config_params() -> dict:
             eps=1e-8,
         ),
         "loss_fn": CrossEntropy(),
-        "max_epochs": 2,
-        "batch_size": 48,
+        "max_epochs": 32,
+        "batch_size": 64,
+        "serializer": SparseSerializer(r=0.5),
+        "seed": 67,
     }
 
 
