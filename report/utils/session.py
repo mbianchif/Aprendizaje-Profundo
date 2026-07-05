@@ -55,6 +55,7 @@ def exec_training(name: str, training_config: PyTrainingConfig, iteration: int) 
     """
     Executes training sessions saving the results to disk.
     """
+    print(f"Executing training session name={name} - iteration={iteration}")
     model = build_lenet5_model_config()
     session = orchestra.orchestrate(model, training_config)
     trained_model, secs_taken = __timed(lambda: session.wait())
