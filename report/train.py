@@ -62,7 +62,7 @@ SESSIONS = [
 
 
 def main():
-    if not should_train(True):
+    if not should_train():
         print("There are past measurements, delete the 'sessions' directory and retry")
         return
 

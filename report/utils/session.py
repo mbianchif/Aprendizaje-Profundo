@@ -63,11 +63,8 @@ def exec_training(name: str, training: PyTrainingConfig, times: int):
         __save_training_results(trained_model, secs_taken, name, str(i))
 
 
-def should_train(confirm: bool) -> bool:
+def should_train() -> bool:
     """
     Looks for past training data, if there is none, returns `True` or `False` otherwise.
     """
-    if not confirm:
-        print("Confirmation flag is set to False")
-
-    return confirm and not SESSIONS_DIR.exists()
+    return not SESSIONS_DIR.exists()

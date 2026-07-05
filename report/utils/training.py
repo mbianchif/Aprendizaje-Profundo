@@ -29,7 +29,6 @@ def __get_common_training_config_params() -> dict:
         "max_epochs": 32,
         "batch_size": 64,
         "serializer": SparseSerializer(r=0.5),
-        "seed": 67,
     }
 
 

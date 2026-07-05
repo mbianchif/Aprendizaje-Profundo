@@ -1,0 +1,8 @@
+{
+    "loss_history": [
+        0.2305833549251318,
+        0.18969777895365358
+    ],
+    "safetensors_path": "sessions/all_reduce-2-0/1.safetensors",
+    "secs_taken": 26.69
+}
