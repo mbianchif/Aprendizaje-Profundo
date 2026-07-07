@@ -1,3 +1,5 @@
+#!/usr/bin/env -S uv run
+
 from dataclasses import dataclass
 from itertools import product
 from random import Random

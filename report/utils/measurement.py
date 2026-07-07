@@ -38,9 +38,12 @@ def __retrieve_training_results(name: str) -> list[SessionResult]:
 
 @cache
 def __build_datasets() -> tuple[Tensor, Tensor]:
+    """
+    Builds the testing datasets for measuring the trained model's accuracy.
+    """
     mnist_dataset_dir = "datasets/mnist"
     x_test_path = f"{mnist_dataset_dir}/mnist_test_samples.bin"
-    x_test = np.fromfile(x_test_path, dtype=np.float32).reshape(-1, 28**2)
+    x_test = np.fromfile(x_test_path, dtype=np.float32).reshape(-1, 1, 28, 28)
     xt = torch.tensor(x_test)
 
     y_test_path = f"{mnist_dataset_dir}/mnist_test_labels.bin"
@@ -51,6 +54,9 @@ def __build_datasets() -> tuple[Tensor, Tensor]:
 
 
 def __calculate_accuracies(results: list[SessionResult]) -> list[float]:
+    """
+    Calculates the model accuracies of all the measurements for the same model.
+    """
     xt, yt = __build_datasets()
     accuracies = []
 
@@ -65,10 +71,16 @@ def __calculate_accuracies(results: list[SessionResult]) -> list[float]:
 
 
 def __calculate_times_taken(results: list[SessionResult]) -> list[float]:
+    """
+    Retrieves the seconds taken for every iteration of the same model.
+    """
     return [result.secs_taken for result in results]
 
 
 def __calculate_loss_histories(results: list[SessionResult]) -> list[list[float]]:
+    """
+    Retrieves and groups the loss histories of the various training sessions of the same model.
+    """
     loss_histories = [result.loss_history for result in results]
     grouped_loss_histories = []
     i = 0
@@ -89,8 +101,12 @@ def __calculate_loss_histories(results: list[SessionResult]) -> list[list[float]
     return grouped_loss_histories
 
 
-def measure_training_results(name: str) -> Measurement:
+def __measure_training_results_for_name(name: str) -> Measurement:
+    """
+    For a given session name measures the relevant statistics.
+    """
     results = __retrieve_training_results(name)
+
     if not results:
         raise ValueError("No training sessions were executed")
 
@@ -114,3 +130,23 @@ def measure_training_results(name: str) -> Measurement:
         loss_history_avgs,
         loss_history_std_devs,
     )
+
+
+def measure_training_results() -> dict[str, Measurement]:
+    """
+    Calculates the statistics for all the training sessions in the sessions directory.
+    """
+    measurements = {}
+
+    for entry in SESSIONS_DIR.iterdir():
+        name = entry.name
+        measurements[name] = __measure_training_results_for_name(name)
+
+    return measurements
+
+
+def available_results() -> bool:
+    """
+    Looks for past training data, if there is none returns `False`, or `True` otherwise.
+    """
+    return SESSIONS_DIR.exists()
