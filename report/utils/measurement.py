@@ -13,6 +13,11 @@ from utils.session import SessionResult, SESSIONS_DIR
 
 @dataclass
 class Measurement:
+    name: str
+    algorithm: str
+    nodes: int
+    offline_epochs: int
+
     acc_avg: float
     acc_std_dev: float
     secs_taken_avg: float
@@ -122,7 +127,13 @@ def __measure_training_results_for_name(name: str) -> Measurement:
     loss_history_avgs = [statistics.mean(lh) for lh in loss_histories]
     loss_history_std_devs = [statistics.stdev(lh) for lh in loss_histories]
 
+    algorithm, nodes, offline_epochs = name.split("-")
+
     return Measurement(
+        name,
+        algorithm,
+        int(nodes),
+        int(offline_epochs),
         acc_avg,
         acc_std_dev,
         secs_taken_avg,
@@ -132,17 +143,11 @@ def __measure_training_results_for_name(name: str) -> Measurement:
     )
 
 
-def measure_training_results() -> dict[str, Measurement]:
+def measure_training_results() -> list[Measurement]:
     """
     Calculates the statistics for all the training sessions in the sessions directory.
     """
-    measurements = {}
-
-    for entry in SESSIONS_DIR.iterdir():
-        name = entry.name
-        measurements[name] = __measure_training_results_for_name(name)
-
-    return measurements
+    return [__measure_training_results_for_name(entry.name) for entry in SESSIONS_DIR.iterdir()]
 
 
 def available_results() -> bool:
