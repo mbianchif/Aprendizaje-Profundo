@@ -1,6 +1,6 @@
 #!/usr/bin/env -S uv run
 
-from argparse import ArgumentParser
+from argparse import ArgumentParser, Namespace
 from dataclasses import dataclass
 from itertools import product
 from random import Random
@@ -65,13 +65,20 @@ class SessionConfig:
         )
 
 
-def main() -> None:
+def parse_args() -> Namespace:
+    """
+    Parses the relevant command line arguments.
+    """
     parser = ArgumentParser()
-    parser.add_argument("--nodes", type=list, help="The amount of nodes to test", required=True)
-    parser.add_argument("--offline_epochs", type=list, help="The offline epochs to test", required=True)
-    parser.add_argument("--repeats", type=int, help="The amount of repeats per session", required=False, default=0)
-    args = parser.parse_args()
+    parser.add_argument("--nodes", type=list, nargs="+", help="The amount of nodes to test", required=True)
+    parser.add_argument("--offline_epochs", type=list, nargs="+", help="The offline epochs to test", required=True)
+    parser.add_argument("--repeats", type=int, help="The amount of repeats per session", required=True)
+    parser.add_argument("--seed", type=int, help="The starting seed for the rng", required=False, default=67)
+    return parser.parse_args()
 
+
+def main() -> None:
+    args = parse_args()
     TOTAL_ITERATIONS = 1 + args.repeats
 
     SESSIONS = [
@@ -81,7 +88,7 @@ def main() -> None:
         for iteration in range(TOTAL_ITERATIONS)
     ]
 
-    rng = Random(67)
+    rng = Random(args.seed)
     seeds = [rng.randint(0, 2**32 - 1) for _ in range(TOTAL_ITERATIONS)]
     docker = Docker(ono_project_root="~/fiuba/tpp")
 
