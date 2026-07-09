@@ -70,8 +70,8 @@ def parse_args() -> Namespace:
     Parses the relevant command line arguments.
     """
     parser = ArgumentParser()
-    parser.add_argument("--nodes", type=list, nargs="+", help="The amount of nodes to test", required=True)
-    parser.add_argument("--offline_epochs", type=list, nargs="+", help="The offline epochs to test", required=True)
+    parser.add_argument("--nodes", type=int, nargs="+", help="The amount of nodes to test", required=True)
+    parser.add_argument("--offline_epochs", type=int, nargs="+", help="The offline epochs to test", required=True)
     parser.add_argument("--repeats", type=int, help="The amount of repeats per session", required=True)
     parser.add_argument("--seed", type=int, help="The starting seed for the rng", required=False, default=67)
     return parser.parse_args()
