@@ -60,10 +60,3 @@ def exec_training(name: str, training_config: PyTrainingConfig, iteration: int) 
     session = orchestra.orchestrate(model, training_config)
     trained_model, secs_taken = __timed(lambda: session.wait())
     __save_training_results(trained_model, secs_taken, name, str(iteration))
-
-
-def should_train() -> bool:
-    """
-    Looks for past training data, if there is none returns `True`, or `False` otherwise.
-    """
-    return not SESSIONS_DIR.exists()

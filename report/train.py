@@ -1,5 +1,6 @@
 #!/usr/bin/env -S uv run
 
+from argparse import ArgumentParser
 from dataclasses import dataclass
 from itertools import product
 from random import Random
@@ -8,7 +9,7 @@ from typing import Self, Callable
 from orchestra import PyTrainingConfig
 
 from utils.docker import Docker
-from utils.session import exec_training, should_train
+from utils.session import exec_training
 from utils.training import (
     build_mnist_all_reduce_training_config,
     build_mnist_parameter_server_training_config,
@@ -64,27 +65,24 @@ class SessionConfig:
         )
 
 
-# Key system parameters to measure.
-NODES = [6, 8, 10]
-OFFLINE_EPOCHS = [0, 2, 4]
-REPEATS = 1
-
-
-SESSIONS = [
-    factory(nodes, offline_epochs, iteration)
-    for nodes, offline_epochs in product(NODES, OFFLINE_EPOCHS)
-    for factory in (SessionConfig.all_reduce, SessionConfig.parameter_server)
-    for iteration in range(1 + REPEATS)
-]
-
-
 def main() -> None:
-    if not should_train():
-        print("There are past measurements, delete the 'sessions' directory and retry")
-        return
+    parser = ArgumentParser()
+    parser.add_argument("--nodes", type=list, help="The amount of nodes to test", required=True)
+    parser.add_argument("--offline_epochs", type=list, help="The offline epochs to test", required=True)
+    parser.add_argument("--repeats", type=int, help="The amount of repeats per session", required=False, default=0)
+    args = parser.parse_args()
+
+    TOTAL_ITERATIONS = 1 + args.repeats
+
+    SESSIONS = [
+        factory(nodes, offline_epochs, iteration)
+        for nodes, offline_epochs in product(args.nodes, args.offline_epochs)
+        for factory in (SessionConfig.all_reduce, SessionConfig.parameter_server)
+        for iteration in range(TOTAL_ITERATIONS)
+    ]
 
     rng = Random(67)
-    seeds = [rng.randint(0, 2**32 - 1) for _ in range(1 + REPEATS)]
+    seeds = [rng.randint(0, 2**32 - 1) for _ in range(TOTAL_ITERATIONS)]
     docker = Docker(ono_project_root="~/fiuba/tpp")
 
     for session in SESSIONS:
