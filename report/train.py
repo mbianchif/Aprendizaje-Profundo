@@ -50,15 +50,13 @@ class SessionConfig:
         if nodes < 2:
             raise ValueError("The node count must be greater than 1")
 
-        nservers = nodes // 2
-
         return cls(
             name=f"parameter_server-{nodes}-{offline_epochs}",
             nodes=nodes,
             iteration=iteration,
             config_builder=lambda addrs, seed: build_mnist_parameter_server_training_config(
                 addrs=addrs,
-                nservers=nservers,
+                nservers=nodes // 2,
                 offline_epochs=offline_epochs,
                 seed=seed,
             ),
@@ -70,10 +68,48 @@ def parse_args() -> Namespace:
     Parses the relevant command line arguments.
     """
     parser = ArgumentParser()
-    parser.add_argument("--nodes", type=int, nargs="+", help="The amount of nodes to test", required=True)
-    parser.add_argument("--offline_epochs", type=int, nargs="+", help="The offline epochs to test", required=True)
-    parser.add_argument("--repeats", type=int, help="The amount of repeats per session", required=True)
-    parser.add_argument("--seed", type=int, help="The starting seed for the rng", required=False, default=67)
+
+    parser.add_argument(
+        "-n",
+        "--nodes",
+        type=int,
+        nargs="+",
+        help="The amount of nodes to test",
+        required=True,
+    )
+    parser.add_argument(
+        "-e",
+        "--offline_epochs",
+        type=int,
+        nargs="+",
+        help="The offline epochs to test",
+        required=True,
+    )
+    parser.add_argument(
+        "-r",
+        "--repeats",
+        type=int,
+        help="The amount of repeats per session",
+        required=True,
+    )
+    parser.add_argument(
+        "-s",
+        "--seed",
+        type=int,
+        help="The starting seed for the rng",
+        required=False,
+        default=67,
+    )
+    parser.add_argument(
+        "-a",
+        "--algorithm",
+        type=str,
+        nargs="+",
+        choices=["all_reduce", "parameter_server"],
+        help="The distributed algorithm to train on",
+        required=True,
+    )
+
     return parser.parse_args()
 
 
@@ -84,7 +120,7 @@ def main() -> None:
     SESSIONS = [
         factory(nodes, offline_epochs, iteration)
         for nodes, offline_epochs in product(args.nodes, args.offline_epochs)
-        for factory in (SessionConfig.all_reduce, SessionConfig.parameter_server)
+        for factory in (getattr(SessionConfig, algorithm) for algorithm in args.algorithm)
         for iteration in range(TOTAL_ITERATIONS)
     ]
 
