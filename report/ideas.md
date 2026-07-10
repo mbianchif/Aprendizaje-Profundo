@@ -47,7 +47,7 @@ Una implementación descentralizada, donde los workers se organizan en una topol
 
 # 0 - Resémen
 
-Como altera la cantidad de epochs offline al entrenamiento y su velocidad en algoritmos distribuidos de entrenamiento de modelos de aprendizaje profundo como Parameter Server y All Reduce.
+Como altera la cantidad de epochs offline al entrenamiento y su velocidad de ejecuión en algoritmos distribuidos de aprendizaje profundo como Parameter Server y All Reduce
 
 kw:
 - Epochs Offline
@@ -60,11 +60,11 @@ kw:
 
 ## 1.1 - Presentación del sistema ONO, hipótesis sobre epochs offline y qué se busca evaluar.
 
-En el mundo del entrenamiento distribuido existen varios algoritmos, entre ellos fueron 2 los que implementamos en nuestro sistema ONO para nuestro trabajo práctico profesional junto a mis compañeros. Estos son Parameter Server y All Reduce. ONO le permite al usuario de forma declarativa definir un modelo, dataset, hiperparámetros y algoritmo distribuido para entrenar su modelo.
+En el mundo del entrenamiento distribuido existen varios algoritmos, entre ellos fueron 2 los que implementamos en nuestro sistema ONO para nuestro trabajo práctico profesional junto a mis compañeros. Estos son Parameter Server y All Reduce. ONO le permite al usuario de forma declarativa definir una arquitectura, dataset, hiperparámetros y algoritmo distribuido para entrenar su modelo.
 
 ## 1.2 - Hipótesis sobre epochs offline y qué se busca evaluar.
 
-El objetivo de este informe es medir cómo una de estas configuraciones, en particular la cantidad de epochs offline, altera a la velocidad y eficacia del entrenamiento de una red LeNet5. Se espera una correlación positiva entre la velocidad del entrenamiento y las epochs offline y a su vez una mayor inestabilidad en el entrenamiento, ya que los pasos son mayores.
+El objectivo de este informe es medir y analizar los resultados de ejecuciones de entrenamientos utilizando distintas configuraciones, en particular la cantidad de épocas offline. Se quiere saber como altera la velocidad de entrenamiento y eficacia del modelo entrenado tomando como referencia una arquitectura como la del modelo LeNet5. Se espera que a mayor cantidad de épocas offline, el entrenamiento sea más rápido pero a su vez deteriore un poco la calidad del entrenamiento.
 
 # 2 - Arquitectura del sistema y Mecanísmos de sincronización.
 
@@ -72,11 +72,11 @@ El objetivo de este informe es medir cómo una de estas configuraciones, en part
 
 ### 2.1.1 Orchestrator, Workers, Servers
 
-El `Orchestrator` es la entidad orquestadora del sistema, le permite al usuario declarar un entrenamiento y es la responsable de configurar a los nodos con su rol para el entrenamiento que se deba llevar a cabo, funciona también de agregador para los resultados parciales de todos los nodos generando un modelo entrenado como output para el usuario. Solo hay uno por entrenamiento.
+El `Orchestrator` es la entidad que orquesta al sistema, le permite al usuario declarar una configuración para su entrenamiento y es responsable de traducir dicha configuración en especificaciones que envían los hiperparámetros necesarios a los nodos entrenadores. Funciona también como agregador de los resultados parciales de los otros nodos una vez que el entrenamiento finaliza. Solo hay uno por entrenamiento y para fines del análisis se utilizará su versión de ffi de python para una mejor automatización.
 
-Los `Worker`s son nodos que dado una arquitectura para un modelo y un dataset, van a computar gradientes y/o dependiendo del algoritmo distribuido seleccionado también aplicar pasos de optimización en los parámetros.
+Los `Worker`s son nodos que dados una arquitectura y dataset, computa gradientes y (dependiendo del algoritmo escogido) también aplica pasos de optimización sobre los parámetros del modelo siendo entrenado. Cuando se entrena utilizando Parameter Server la optimización de parámetros del modelo global la aplica el servidor, en cambio en All Reduce, al ser un algoritmo descentralizado, de esto se encarga cada uno de los workers.
 
-Los `Server`s son nodos que dado un algoritmo de inicialización de pesos, crean los parámetros del modelo, reciben gradientes de los workers, los agregan y aplican steps de optimización sobre los pesos para luego devolverlos a los workers y repetir el proceso.
+Los `Server`s son nodos que dados un algoritmo de inicialización de pesos, crean e inicializan lo pesos iniciales del modelo y esperan por gradientes calculados por los workers. Estos luego son agreagdos entre así y aplicados en los parámetros previamente dichos. Una vez se aplican los gradientes, los pesos actualizados son compartidos con los workers para repetir el proceso hasta que estos determinen que el entrenamiento finalizó.
 
 ### 2.1.2 Parameter Server
 
