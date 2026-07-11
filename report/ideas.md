@@ -100,30 +100,69 @@ Si nosotros configuramos `E = epochs offline > 0` entonces este punto de sincron
 
 ## 3.1.1 Hardware utilizado.
 
-Para hacer las mediciones se utilizaron varias computadoras
+Todos los entrenamientos fueron realizados en la misma computadora de forma secuencial utilizando Docker para simular un entorno multicomputadora, sumaron un total de 10.5hs de ejecución.
 
-> TODO: Agregar un listado de las computadoras que se utilizaron.
+| Categoría | Componente | Especificación Técnica / Detalle |
+| :--- | :--- | :--- |
+| **Procesador (CPU)** | Modelo | Intel Core i5-8350U |
+| | Arquitectura | x86_64 |
+| | Núcleos Físicos | 4 |
+| | Hilos Lógicos (Threads) | 8 |
+| | Frecuencia de Reloj | Base: 1.7 GHz \| Turbo: 3.6 GHz |
+| **Memoria** | Capacidad Total RAM | 8 GB |
+| | Tipo y Velocidad | DDR4 @ 2400 MHz |
+| **Entorno de Software** | Sistema Operativo | Ubuntu 24.04 LTS |
+| | Entorno de Ejecución | Docker 29.6.1 \| Rust 1.96.1 \| CPython 3.14.0 |
 
-## 3.1.2 Dataset, modelo y arquitectura.
+## 3.1.2 Dataset, modelo, arquitectura, configuración de ONO.
 
-> TODO: Explicar el dataset LeNet5, el modelo y su arquitectura. Capaz mostrar el código que lo describe en python.
+| Categoría | Parámetro | Valores Evaluados |
+| :--- | :--- | :--- |
+| **Modelo y Datos** | Dataset | MNIST (Full) |
+| | Arquitectura de Red | LeNet-5 |
+| | Función de Pérdida | Entropía Cruzada |
+| **Optimización** | Optimizador | Adam ($\alpha = 0.01, \beta_1 = 0.9, \beta_2 = 0.999, \epsilon = 10^{-8}$) |
+| | Tamaño de Mini-Batch | 64 |
+| | Épocas de Entrenamiento | 48 |
+| **Infraestructura** | Serialización | Sparse ($r = 0.5$) |
+| **Variables Libres** | Algoritmo Distribuido | All-Reduce, Parameter Server (Sincrónico/Bloqueante) |
+| | Escala del Cluster | 2, 4, 6, 8, 10 nodos |
+| | Épocas Offline | 0, 1, 2, 3, 4 épocas offline |
 
-## 3.1.3 Configuración de los ensayos a medir.
-
-> TODO: Explicar la configuración particular de ONO para esta parte, estilo max epochs, offline epochs, etc...
+Hago una mención especial para explicar la sección de **Infraestructura**, la configuración de serialización explica el método de serialización de gradientes. El sistema soporta una serialización sparse (o dispersa). El parámetro `r` sirve para acotar el sampleo del gradiente que se quiere transmitir, a mayor `r` mayor será la compresión (idealmente). El algoritmo calcula `k = len(grad) * (1.0 - r)`, `k` luego se redondea y se escogen `k` valores dentro del gradiente para fijar un umbral, todo valor del gradiente que alcance o supere ese umbral en magnitud, se incorporará al mensaje de gradiente por enviar. Por lo que un `r = 0` samplea sobre todo el gradiente, un `r = 0.5` (como el usado en los experimentos) va a samplear la mitad del gradiente para calcular ese umbral.
 
 # 4 - Resultados y análisis.
 
-> TODO: Estaría bueno que se me ocurra alguna cosa interesante que juegue con las epochs offline.
+## 4.1 Comparación de tiempos entre All Reduce y Parameter Server con distintos epochs offline
 
-## 4.1 Ejecuciones de Parameter Server con distintas cantidades de epochs offline.
+> Imágen de tiempos de ejecución
 
-## 4.2 Ejecuciones de All Reduce con distintas cantidades de epochs offline.
+Teniendo en cuenta que los entrenamientos se ejecutaron en la misma computadora sabía que los tiempos no iban a diferir demasiado entre ejecuciones con distintos valores de épocas offline pero tampoco me imaginé que iban a ser casi identicos. Acá claramente se ve que no importa la cantidad de épocas offline que se configure, va a tener una diferencia de unos pocos segundos y no existe alguna relación directa. También se ve que la cantidad de nodos es la que de verdad hace la diferencia.
 
-## 4.3 Capaz una comparación entre los algoritmos (seria del informe de Loren pero tirando más hacía las epochs offline).
+Entiendo que el estancamiento de la mejora en performance a partir de los 4 nodos se debe a que la computadora utiliazada tiene 4 cores físicos, por lo que tiene sentido que no tenga un gran impacto seguir subiendo la cantidad de nodos. Incluso ya llegados los 10 nodos, All Reduce parece tener un resultado contrario al esperado, donde la performance disminuye y termina tardando más en ejecutar el entrenamiento en comparación con los entrenamientos de 8 nodos.
+
+Para Parameter Server no parece tener tanto impacto esto porque los momentos de carga de workers y servers ocurren en momentos distintos, por lo que tiene sentido que aún utilizando 10 nodos (5 workers y 5 servers) no se alcance al límite de nodos necesario para empeorar el performance.
+
+Para Parameter Server no parece tener tanto impacto esto porque los momentos de carga de workers y servers ocurren en momentos distintos, por lo que tiene sentido que aún utilizando 10 nodos (5 workers y 5 servers) no se alcance al límite de nodos necesario para empeorar el performance.
+
+## 4.2 Comparación de accuracy entre All Reduce y Parameter Server con distintos epochs offline
+
+> Imágen de comparación de accuracy
+
+Los modelos entrenados bajo mayores épocas offline resultaron con una peor accuracy, esto es esperable dado que los parámetros se sincronizan menos seguido entre los nodos, causando una mayor independencia entre los workers y en consecuencia que terminen divagando por la función de pérdida.
+
+## 4.3 Comparación de périda durante el entrenamiento entre All Reduce y Parameter Server con distintos epochs offline
+
+> Imágen de pérdida en ejecuciones de los distintos algoritmos
+
+Es clara la correlación entre cantidad de épocas offline y el deterioro del entrenamiento, a medida que crecen las épocas offline el entrenamiento es más inestable y resulta en un mayor error según la función de pérdida, en este caso la entropía cruzada.
 
 # 5 - Conclusiones y lecciones aprendidas.
 
 ## 5.1 Balance final entre velocidad de comunicación y estabilidad del entrenamiento.
+
+En conclusión creo que es importante rescatar que al haber ejecutado los entrenamientos en una sola máquina, los resultados no son tal cual como esperaba, en particular los tiempos de ejecución esperaba que fueran un poco más dependientes de la cantidad de épocas offline, me sorprendió que no tuvo ningún tipo de impacto. En cuanto al deterioro del entrenamiento no me sorprende que sea tanto peor.
+
+Me imagino que en un setup real del sistema con varias computadoras en una red local sí va a haber diferencia en los tiempos de ejecución con distintas cantidades de épocas offline. Hay que tener en cuenta cual es el cuello de botella del sistema, porque dependiendo de los tamaños del dataset o el modelo, el propio cálculo de matrices u optimizaciones podrían llegar a tener un mayor impacto que la propia comunicación de los valores calculados. En casos donde los modelos son más chicos, donde hasta la divergencia de los workers podría no llegar a tener tal impacto en el deterioro del modelo, podría ser interesante incorporar mayores épocas offline.
 
 # 6 - Bibliografía.
