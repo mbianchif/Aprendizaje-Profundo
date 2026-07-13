@@ -1,0 +1,35 @@
+\section{Resultados y An\'alisis Experimental}
+
+\subsection{An\'alisis Temporal y Escalabilidad del Hardware}
+La variaci\'on de $E$ no indujo mejoras temporales apreciables; las curvas de ejecuci\'on total resultaron pr\'acticamente solapadas en todas las pruebas. Al estar confinada la simulaci\'on en una CPU de 4 n\'ucleos f\'isicos, el cuello de botella dominante no es el transporte de mensajes por red, sino el tiempo bruto de c\'omputo y la contenci\'on de hilos en el procesador.
+
+\begin{figure}[H]
+  \centering
+  \caption{Mapeo conceptual de Parameter Server y All-Reduce en O.N.O.}
+  \label{fig:arquitecturas}
+\end{figure}
+
+Como se observa en la \Cref{fig:tiempos}, el rendimiento total se estanca de forma cr\'itica al superar los 4 nodos activos. En All-Reduce, escalar a 10 nodos l\'ogicos incluso degrada la performance global debido al overhead de sincronizaci\'on del anillo sobre cores f\'isicos compartidos. En contraposici\'on, Parameter Server asimila mejor la escala de 10 nodos (5 \emph{workers} / 5 \emph{servers}) porque la barrera bloqueante alterna temporalmente las r\'afagas de c\'omputo y agregaci\'on, retrasando la saturaci\'on de la CPU.
+
+\begin{figure}[H]
+  \centering
+  \caption{Tiempos totales de entrenamiento distribuidos seg\'un n\'umero de nodos.}
+  \label{fig:tiempos}
+\end{figure}
+
+\subsection{M\'etricas de Exactitud e Inestabilidad de P\'erdida}
+Retrasar el consenso de par\'ametros degrada severamente la capacidad predictiva. Valores altos de \'epocas offline ($E$) causan una ca\'ida notable y sistem\'atica en la \emph{accuracy} final medida sobre el conjunto de test (\Cref{fig:accuracy}).
+
+\begin{figure}[H]
+  \centering
+  \caption{Evoluci\'on de la Accuracy en el conjunto de test seg\'un el valor de $E$.}
+  \label{fig:accuracy}
+\end{figure}
+
+Este comportamiento correlaciona con el comportamiento de la Entrop\'ia Cruzada (\Cref{fig:loss}). El aislamiento prolongado provoca que el promediado tard\'io de pesos introduzca correcciones ortogonales abruptas, desestabilizando el descenso del optimizador Adam y generando picos dr\'asticos en el error de entrenamiento.
+
+\begin{figure}[H]
+  \centering
+  \caption{Trayectoria del Loss de Entrop\'ia Cruzada exhibiendo ruido estoc\'astico por c\'omputo offline.}
+  \label{fig:loss}
+\end{figure}

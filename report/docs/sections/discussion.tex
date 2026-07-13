@@ -1,0 +1,4 @@
+\section{Discusi\'on y Limitaciones}
+Las ventajas del c\'omputo offline est\'an estrictamente atadas a la latencia real de la red f\'isica. En un entorno local compartido mediante Docker, eliminar el overhead de mensajes no compensa el costo matem\'atico del desv\'io de gradientes, pagando una penalizaci\'on severa de precisi\'on sin retornos temporales. 
+
+En contraposici\'on, en cl\'usters distribuidos reales (multi-m\'aquina sobre LAN/WAN), retrasar la agregaci\'on resulta cr\'itico para amortizar la latencia f\'isica de sockets e interrupciones de E/S. El compromiso final debe ajustarse evaluando el tama\~no del modelo y la velocidad de interconexi\'on.

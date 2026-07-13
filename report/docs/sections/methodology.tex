@@ -1,0 +1,67 @@
+\section{Metodología Experimental}
+Todos los entrenamientos fueron realizados en la misma computadora de forma secuencial utilizando Docker para simular un entorno multicomputadora, sumando un total de \num{10.5} horas de ejecución. Las especificaciones técnicas del entorno se detallan en la \Cref{tab:environment}, mientras que las variables lógicas y configuraciones del modelo O.N.O. se consolidan en la \Cref{tab:configs}.
+
+\begin{table}[ht]
+\caption{Configuración de Ensayos}
+\label{tab:configs}
+\centering
+\footnotesize
+\begin{tabular}{llp{2.4cm}}
+\toprule
+\textbf{Categoría} & \textbf{Parámetro} & \textbf{Valores Evaluados} \\
+\midrule
+\multirow{3}{*}{Modelo y Datos} & Dataset & MNIST (Full) \\
+ & Arquitectura de Red & LeNet-5 \\
+ & Función de Pérdida & Entropía Cruzada \\
+\midrule
+\multirow{3}{*}{Optimización} & Optimizador & Adam \newline $\alpha = 0.01 \newline \beta_1 = 0.9 \newline \beta_2 = 0.999 \newline \epsilon = 10^{-8}$ \\
+ & Tamaño de Mini-Batch & 64 \\
+ & Épocas Máximas & 48 \\
+\midrule
+Infraestructura & Serialización & Sparse ($r = 0.5$) \\
+\midrule
+\multirow{3}{*}{Variables Libres} & Algoritmo Distribuido & All-Reduce, Parameter Server (Sincrónico/Bloqueante) \\
+ & Nodos & 2, 4, 6, 8, 10 \\
+ & Épocas Offline & 0, 1, 2, 3, 4 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Compresión de Red: Serialización Sparse}
+La configuración de la sección de infraestructura responde al método de serialización de gradientes del sistema, el cual soporta una variante \emph{sparse} (o dispersa). El parámetro $r$ sirve para acotar el sampleo del gradiente que se quiere transmitir: a mayor $r$, mayor será la compresión teórica. 
+
+El algoritmo calcula la cardinalidad efectiva del mensaje mediante:
+
+\begin{equation}
+k = \text{round}\left(|g| \cdot (1.0 - r)\right)
+\end{equation}
+
+El valor resultante $k$ se utiliza para escoger los $k$ elementos de mayor magnitud absoluta dentro del tensor de gradientes local, fijando un umbral mínimo. Todo valor que alcance o supere dicho umbral se incorporará al mensaje por enviar. De esta forma, un valor de $r = 0.0$ samplea la totalidad del gradiente, mientras que un $r = 0.5$ (como el configurado para estos experimentos) filtra el \SI{50}{\percent} de los componentes para disminuir el transito por red. Los elementos descartados se acumulan en un gradiente residual para ser considerados en el próximo mensaje.
+
+\begin{table}[ht]
+\caption{Entorno de Ejecución}
+\label{tab:environment}
+\centering
+\footnotesize
+\begin{tabular}{llp{2.4cm}}
+\toprule
+\textbf{Categoría} & \textbf{Componente} & \textbf{Detalle} \\
+\midrule
+\multirow{5}{*}{Procesador} & Modelo & Intel Core i5-8350U \\
+	& Arquitectura & x86\_64 \\
+	& Núcleos Físicos & 4 \\
+	& Hilos Lógicos & 8 \\
+	& Frecuencia de Reloj & Base: \SI{1.7}{\giga\hertz} \newline Turbo: \SI{3.6}{\giga\hertz} \\
+\midrule
+\multirow{2}{*}{Memoria} & Capacidad Total RAM & 8 GB \\
+	& Tipo & DDR4 \\
+	& Velocidad & \SI{2400}{\mega\hertz} \\
+\midrule
+\multirow{2}{*}{Entorno de Software} & Sistema Operativo & Ubuntu 24.04 LTS \\
+	& Entorno de Ejecución & Docker v29.6.1 \newline Rust v1.96.1 \newline CPython v3.14.0 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\FloatBarrier
+

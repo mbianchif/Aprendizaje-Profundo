@@ -1,0 +1,7 @@
+\begin{abstract}
+Retrasar la sincronización entre nodos en un entrenamiento distribuido reduce el impacto de la red pero induce divergencia entre los pesos (\emph{client drift}). Este trabajo evalúa ese impacto de variar las épocas offline ($E$) utilizando el sistema de entrenamiento O.N.O. empleando \emph{Parameter Server} sincrónico y emph{All Reduce (ring)}. Entrenando LeNet-5 sobre MNIST FULL en un cluster simulado mediante Docker en una sola computadora, los resultados muestran que incrementar $E$ no reduce el tiempo total debido a la contención del CPU, mientras que degrada la \emph{accuracy} final e incrementa la inestabilidad del entrenamiento.
+\end{abstract}
+
+\begin{IEEEkeywords}
+Épocas Offline, Parameter Server, All-Reduce, O.N.O., Client Drift.
+\end{IEEEkeywords}

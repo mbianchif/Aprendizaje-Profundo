@@ -1,0 +1,55 @@
+\documentclass[conference,10pt]{IEEEtran}
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[spanish,es-noindentfirst]{babel}
+\usepackage{multirow}
+\usepackage{microtype}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{siunitx}
+\usepackage{subcaption}
+\usepackage{xcolor}
+\usepackage{amsmath}
+\usepackage{placeins}
+\usepackage{float}
+\usepackage[hidelinks]{hyperref}
+\usepackage[capitalise,noabbrev]{cleveref}
+
+\addto\captionsspanish{\renewcommand{\tablename}{Tabla}}
+\crefname{figure}{figura}{figuras}\Crefname{figure}{Figura}{Figuras}
+\crefname{table}{tabla}{tablas}\Crefname{table}{Tabla}{Tablas}
+\crefname{section}{sección}{secciones}\Crefname{section}{Sección}{Secciones}
+\crefname{equation}{ec.}{ecs.}\Crefname{equation}{Ec.}{Ecs.}
+\AtBeginDocument{%
+  \renewcommand{\crefpairconjunction}{ y }%
+  \renewcommand{\creflastconjunction}{ y }%
+  \renewcommand{\crefrangeconjunction}{ a }}
+
+\sisetup{round-mode=places,round-precision=2,detect-weight=true}
+\graphicspath{{figures/}{images/}}
+
+\begin{document}
+
+\title{Impacto de las Épocas Offline en la Convergencia y Rendimiento de Entrenamientos Distribuidos con O.N.O.}
+
+\author{\IEEEauthorblockN{Marcos Bianchi Fernández}
+\IEEEauthorblockA{Facultad de Ingeniería, Universidad de Buenos Aires\\
+Aprendizaje Profundo\\
+Julio 2026}}
+
+\maketitle
+
+\input{sections/abstract}
+\input{sections/introduction}
+\input{sections/architecture}
+\input{sections/methodology}
+\input{sections/results}
+\input{sections/discussion}
+\input{sections/conclusion}
+
+\nocite{*} 
+\bibliographystyle{IEEEtran}
+\bibliography{references}
+
+\end{document}

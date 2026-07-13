@@ -1,0 +1,34 @@
+\section{Arquitectura del Sistema y Mecanismos de Sincronización}
+
+\subsection{Componentes Principales de O.N.O.}
+\begin{itemize}
+    \item \textbf{Orchestrator:} Mediante una configuración declarativa del entrenamiento brindada por el usuario, configura al resto de nodos para iniciar el entrenamiento de un modelo usando alguno de los algoritmos implementados. Al finalizar un entrenamiento, consolida los resultados parciales generando un archivo safetensors con el resultado final que contiene los parámetros del modelo entrenado. Para una mejor automatización, cuenta con una interfaz FFI de Python que fue utilizada para simular los ensayos discutidos más adelante.
+    \item \textbf{Workers:} Computan gradientes locales por backpropagation sobre una partición asignada del dataset. Bajo un entrenamiento de All-Reduce, aplican localmente el optimizador; en Parameter server delegan esa actualización a los servidores.
+    \item \textbf{Servers:} Nodos dedicados al guardado y optimización de parámetros del modelo entrenado. Reciben gradientes parciales de los workers, los agregan y aplican sobre los parámetros para luego redistribuirlos y volver a empezar.
+\end{itemize}
+
+
+\subsection{Dinámica de Sincronización Demorada (E > 1)}
+Al parametrizar $E > 0$, los nodos entrenan aislados durante múltiples ciclos. El tráfico de res de reduce considerablemente de forma inversamente proporcional a $E$. no obstante, la falta de sincronización de estado causa que los pesos locales de cada uno de los workers diverjan (\emph{client drift}). Al alcanzar la etapa de sincronización, la consolidación se realiza por el promedio directo de los gradientes parciales.
+
+Bajo un entrenamiento optimizado por \emph{Descenso de Gradiente}, una ecuación que describe la etapa de optimización es:
+
+\begin{equation}
+W_{t + 1} = W_{t} - \frac{\lambda}{N} \sum_{i=1}^{N} G_{i}
+\end{equation}
+
+\subsection{Algoritmos de Entrenamiento Distribuido}
+El sitema implementa varios algoritmos de entrenamiento distribuido, en particular el informe se va a centrar el los siguientes:
+
+\begin{itemize}
+    \item \textbf{Parameter Server Sincrónico:} Un algoritmo centralizado donde una barrera bloquea a los \emph{workers} hasta que cada \emph{server} procesa el lote global de gradientes, garantizando que todos los \emph{workers} estén en todo moemento calculando gradientes de la misma epoch.
+    \item \textbf{All Reduce:} Un algoritmo descentralizado donde los \emph{workers} se organizan en una topología de anillo lógico compartiendo fragmentos de gradientes en fases sucesivas de **satter** y **gather**, calculando de forma idéntica y local el vector de parámetros resultante.
+\end{itemize}
+
+\begin{figure*}[t]
+    \centering
+    \includegraphics[width=0.75\textwidth]{topologies} 
+
+    \caption{Topologías distribuidas soportadas en O.N.O. (izquierda) Arquitectura centralizada bajo \emph{Parameter server} donde los \emph{workers} obienen parámetros y envían gradientes a \emph{servers} fragmentados. (derecha) Topología descentralizada en anillo \emph{All Reduce} donde cada nodo actúan como \emph{worker} comunicándose con sus nodos adyacentes.}
+    \label{fig:topologias_ono}
+\end{figure*}
