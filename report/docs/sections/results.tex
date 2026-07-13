@@ -75,3 +75,5 @@ Es claro que al optimizador le cuesta más al comienzo, ya que suele ser la etap
 \end{figure}
 
 Para \emph{All Reduce} sucede algo parecido aunque parece más controlado, sinceramente esperaba lo contrario, hayar mayor inestabilidad con este algoritmo que con \emph{Parameter Server}, se ve que se mantuvo más estable.
+
+Siendo que la desestabilidad perjudica a todo el entrenamiento, capaz es interesante preguntarse en qué momento conviene aplicar las épocas offline, a priori podría suponerse que conviene introducirlas cuando el entrenamiento está más estable, cuando el grueso de la optimización ya pasó, con la esperanza de que algún \emph{worker} haya encontrado un muy buen mínimo local para desestabilizar al resto y llevarselos con él.
