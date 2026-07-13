@@ -1,35 +1,77 @@
-\section{Resultados y An\'alisis Experimental}
+\section{Resultados y Análisis Experimental}
 
-\subsection{An\'alisis Temporal y Escalabilidad del Hardware}
-La variaci\'on de $E$ no indujo mejoras temporales apreciables; las curvas de ejecuci\'on total resultaron pr\'acticamente solapadas en todas las pruebas. Al estar confinada la simulaci\'on en una CPU de 4 n\'ucleos f\'isicos, el cuello de botella dominante no es el transporte de mensajes por red, sino el tiempo bruto de c\'omputo y la contenci\'on de hilos en el procesador.
+\subsection{Análisis Temporal y Escalabilidad del Hardware}
 
-\begin{figure}[H]
-  \centering
-  \caption{Mapeo conceptual de Parameter Server y All-Reduce en O.N.O.}
-  \label{fig:arquitecturas}
-\end{figure}
-
-Como se observa en la \Cref{fig:tiempos}, el rendimiento total se estanca de forma cr\'itica al superar los 4 nodos activos. En All-Reduce, escalar a 10 nodos l\'ogicos incluso degrada la performance global debido al overhead de sincronizaci\'on del anillo sobre cores f\'isicos compartidos. En contraposici\'on, Parameter Server asimila mejor la escala de 10 nodos (5 \emph{workers} / 5 \emph{servers}) porque la barrera bloqueante alterna temporalmente las r\'afagas de c\'omputo y agregaci\'on, retrasando la saturaci\'on de la CPU.
+La variación de $E$ no trajo ningún tipo de mejora apreciable en el tiempo de ejecución de los entrenamientos, las curvas de cada configuración se solapan en todas las pruebas. Dado que el sistema se ejecuta sobre una sola máquina tiene sentido que no haya una gran diferencia en tiempo, aunque sí me esperaba algún tipo de mejora.
 
 \begin{figure}[H]
   \centering
-  \caption{Tiempos totales de entrenamiento distribuidos seg\'un n\'umero de nodos.}
-  \label{fig:tiempos}
+  \includegraphics[width=0.5\textwidth]{all_reduce/execution_time_summary}
+  \caption{Comparación de tiempos de ejecución bajo distintas cantidades de Épocas Offline con All Reduce.}
+  \label{fig:all_reduce_tiempos}
 \end{figure}
 
-\subsection{M\'etricas de Exactitud e Inestabilidad de P\'erdida}
-Retrasar el consenso de par\'ametros degrada severamente la capacidad predictiva. Valores altos de \'epocas offline ($E$) causan una ca\'ida notable y sistem\'atica en la \emph{accuracy} final medida sobre el conjunto de test (\Cref{fig:accuracy}).
+Como se observa en la \Cref{fig:all_reduce_tiempos}, el rendimiento escalable se estanca al superar los 4 nodos. En All Reduce, escalar a 10 nodos llegó a degradar la performance debido al alto nivel de contención sobre el CPU.
 
 \begin{figure}[H]
   \centering
-  \caption{Evoluci\'on de la Accuracy en el conjunto de test seg\'un el valor de $E$.}
-  \label{fig:accuracy}
+  \includegraphics[width=0.5\textwidth]{parameter_server/execution_time_summary}
+  \caption{Comparación de tiempos de ejecución bajo distintas cantidades de Épocas Offline con Parameter Server.}
+  \label{fig:parameter_server_tiempos}
 \end{figure}
 
-Este comportamiento correlaciona con el comportamiento de la Entrop\'ia Cruzada (\Cref{fig:loss}). El aislamiento prolongado provoca que el promediado tard\'io de pesos introduzca correcciones ortogonales abruptas, desestabilizando el descenso del optimizador Adam y generando picos dr\'asticos en el error de entrenamiento.
+Se aprecia facilmente en la \Cref{fig:parameter_server_tiempos} que el sistema aún con 10 nodos (5 \emph{workers} y 5 \emph{servers}) consigue mejorar su tiempo previo con menor cantidad de nodos. A diferencia de \emph{All Reduce}, donde los nodos están constantemente procesando datos, \emph{Parameter Server} tiene momentos de tiempo muerto, por ejemplo, en la variación sincrónica utilizada, donde en el momento en el que el \emph{server} está optimizando el modelo sabemos que el resto de workers tienen que estar bloqueados en la barrera interna del servidor. Esto le cede hilos de ejecución a los nodos \emph{server}, por lo que se aprovecha mejor tener más de un tipo de entidad por computadora, o en este caso, CPU.
+
+Es importante notar que ya de entrada All Reduce es más rápido que Parameter Server, esto tiene sentido porque All Reduce aprovecha mejor la distribución de responsabilidades y cada nodo está constantemente procesando datos, ya sea calculando gradientes, compartiendolos u optimizando los parámetros.
+
+\subsection{Métricas de Exactitud}
+
+En cuanto a resultados de accuracy, la variación de $E$ se puede apreciar mucho mejor ya que no depende del hardware en donde se esté ejecutando el entrenamiento. Se aprecian mucho mejor estos resultados que los anteriores.
+
+Consistentemente para ambos algoritmos el modelo resultante es peor en cuanto a accuracy a medida que $E$ incrementa, lo cual no me sorprende para nada, en cuanto a que tán peor es, teniendo en cuenta que introducir tan solo 1 época offline ya reduce la cantidad de sincronizaciones en la red a la mitad, este deterioro es tan solo del ~1\%.
+
+Si los entrenamientos fueran ejecutados en un entorno real, creo yo que se podría entender mejor que tan superior es incrementar $E$, por ejemplo, llegar a ejecutar más épocas totales en la misma cantidad de tiempo, ¿Podría un setup como ese superar a uno que sincronize en todas las épocas?
 
 \begin{figure}[H]
   \centering
-  \caption{Trayectoria del Loss de Entrop\'ia Cruzada exhibiendo ruido estoc\'astico por c\'omputo offline.}
-  \label{fig:loss}
+  \includegraphics[width=0.5\textwidth]{parameter_server/accuracy_summary}
+  \caption{Comparación de accuracy bajo distintas cantidades de Épocas Offline con Parameter Server.}
+  \label{fig:parameter_server_accuracy}
 \end{figure}
+
+Como mencioné antes, se nota un degradamiento en la accuracy a mayor $E$. Lo que si puede ser interesante es que a medida que incrementa la cantidad de nodos, esto se hace más notable, lo cual tiene sentido si pensamos que a medida que la cantidad de nodos aumenta, también aumentan las particiones de datasets y esto las hace cada vez mas chicas. El \emph{Orchestrator} termina repartiendo particiones de dataset cada vez más chicas y potencialmente más sesgadas, por lo que tener menos sincronización de parámetros en los \emph{workers} termina perjudicando aún más al fin del día.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.5\textwidth]{all_reduce/accuracy_summary}
+  \caption{Comparación de accuracy bajo distintas cantidades de Épocas Offline con All Reduce.}
+  \label{fig:all_reduce_accuracy}
+\end{figure}
+
+Hablando de \emph{All Reduce}, la degradación de la accuracy en relación a la cantidad de nodos y $E$ es todavía más notable que en \emph{Parameter Server}. En cada uno de los setups empleados, \emph{All Reduce} siempre tuvo el doble de \emph{workers} (ya que no tiene \emph{servers}). Esto implica dividir más los datasets y aún más independencia de cada uno de ellos con respecto al resto.
+
+Sincronizar los parámetros y/o gradietes de forma tan tardía también provoca que sus promediados introduzcan correcciones más fuertes y abruptas, generando una desestabilización en el descenso por el gradiente de la función de pérdida y resultando en un peor modelo resultante.
+
+\subsection{Inestabilidad de Pérdida durante el Entrenamiento}
+
+Mediante las historias de pérdida de los entrenamientos realizados, junté un par que me parecieron buenos para relevar algunos puntos importantes. Como mencioné anteriormente, esperaba que incrementar $E$ introdujera inestabilidad en el entrenamiento.
+
+Para los entrenamientos realizados en \emph{All Reduce} y \emph{Parameter Server} de 2 nodos se nota esta inestabilidad en forma de picos cada vez más pronunciados a medida que crece $E$.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.5\textwidth]{parameter_server-2/loss_history_per_offline_epoch}
+  \caption{Trayectoria de Loss en Entropía Cruzada exchibiendo ruido estocástico por cómputo offline en Parameter Server (2 nodos).}
+  \label{fig:parameter_server_loss}
+\end{figure}
+
+Es claro que al optimizador le cuesta más al comienzo, ya que suele ser la etapa de corrección más grande del entrenamiento, una vez que encuentra un mínimo local se estabiliza y converge. Notar que cada vez converge a valores más altos, ¿Será que a mayor $E$ no es posible o dificulta al optimizador de alguna forma a no alcanzar nunca el mínimo local verdadero? Al estilo de tener un alto valor de \emph{learning rate} en el que el optimizador podría quedar oscilando sobre el mínimo sin nunca alcanzarlo.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.5\textwidth]{all_reduce-2/loss_history_per_offline_epoch}
+  \caption{Trayectoria de Loss en Entropía Cruzada exchibiendo ruido estocástico por cómputo offline en All Reduce (2 nodos).}
+  \label{fig:all_reduce_loss}
+\end{figure}
+
+Para \emph{All Reduce} sucede algo parecido aunque parece más controlado, sinceramente esperaba lo contrario, hayar mayor inestabilidad con este algoritmo que con \emph{Parameter Server}, se ve que se mantuvo más estable.
