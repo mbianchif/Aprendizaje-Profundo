@@ -1,4 +1,6 @@
-\section{Discusi\'on y Limitaciones}
-Las ventajas del c\'omputo offline est\'an estrictamente atadas a la latencia real de la red f\'isica. En un entorno local compartido mediante Docker, eliminar el overhead de mensajes no compensa el costo matem\'atico del desv\'io de gradientes, pagando una penalizaci\'on severa de precisi\'on sin retornos temporales. 
+\section{Discusión y Limitaciones}
+Las ventaja de introducir épocas offline es estrictamente bajar el tiempo del entrenamiento ejecutado. En un entorno local simulado, eliminar ese overhead de comunicación no compensa al costo que resulta de un peor modelo. Por lo menos en estos experimentos no se evidenciaron ventajas de utilizar un $E$ mayor a 0.
 
-En contraposici\'on, en cl\'usters distribuidos reales (multi-m\'aquina sobre LAN/WAN), retrasar la agregaci\'on resulta cr\'itico para amortizar la latencia f\'isica de sockets e interrupciones de E/S. El compromiso final debe ajustarse evaluando el tama\~no del modelo y la velocidad de interconexi\'on.
+En contraposición, en un setup multi-computadora sobre una red física, retrasar la agregación de gradientes y las sincronizaciones de nodos puede resultar crítico para amortizar el tiempo de comunicación. Al final del día se tendrá que tomar en cuenta el tamaño del modelo, la velocidad de la red y cuantos nodos se están utilizando.
+
+Es importante notar que con modelos más grandes, los mensajes (que contienen gradientes y parámetros) van a ser grandes también. Para entrenamientos de mucho dataset y poco modelo, el cuello de botella va a ser el cómputo de gradientes y optimización del modelo. En cambio, entrenamientos de poco dataset y mucho modelo, donde la comunicación toma más protagonismo, incrementar $E$ puede ser útil para bajar los tiempos de ejecución y realizar más épocas por segundo.
