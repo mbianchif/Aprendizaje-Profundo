@@ -22,7 +22,7 @@ El sitema implementa varios algoritmos de entrenamiento distribuido, en particul
 
 \begin{itemize}
     \item \textbf{Parameter Server Sincrónico:} Un algoritmo centralizado donde una barrera bloquea a los \emph{workers} hasta que cada \emph{server} procesa el lote global de gradientes, garantizando que todos los \emph{workers} estén en todo moemento calculando gradientes de la misma epoch.
-    \item \textbf{All Reduce:} Un algoritmo descentralizado donde los \emph{workers} se organizan en una topología de anillo lógico compartiendo fragmentos de gradientes en fases sucesivas de **satter** y **gather**, calculando de forma idéntica y local el vector de parámetros resultante.
+    \item \textbf{All Reduce:} Un algoritmo descentralizado donde los \emph{workers} se organizan en una topología de anillo lógico compartiendo fragmentos de gradientes en fases sucesivas de **scatter** y **gather**, calculando de forma idéntica y local el vector de parámetros resultante.
 \end{itemize}
 
 \begin{figure*}[t]
