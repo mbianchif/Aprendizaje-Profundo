@@ -10,7 +10,7 @@ Todos los entrenamientos fueron realizados en la misma computadora de forma secu
 \toprule
 \textbf{Categoría} & \textbf{Parámetro} & \textbf{Valores Evaluados} \\
 \midrule
-\multirow{3}{*}{Modelo y Datos} & Dataset & MNIST (Full) \\
+\multirow{3}{*}{Modelo y Datos} & Dataset & MNIST (Full)~\cite{lecun1998gradient} \\
  & Arquitectura de Red & LeNet-5 \\
  & Función de Pérdida & Entropía Cruzada \\
 \midrule
@@ -28,7 +28,7 @@ Infraestructura & Serialización & Sparse ($r = 0.5$) \\
 \end{table}
 
 \subsection{Compresión de Red: Serialización Sparse}
-La configuración de la sección de infraestructura responde al método de serialización de gradientes del sistema, el cual soporta una variante \emph{sparse} (o dispersa). El parámetro $r$ sirve para acotar el sampleo del gradiente que se quiere transmitir: a mayor $r$, mayor será la compresión teórica. 
+La configuración de la sección de infraestructura responde al método de serialización de gradientes del sistema, el cual soporta una variante \emph{sparse} (o dispersa) diseñada para optimizar la comunicación distribuida limitando el intercambio de sectores poco impactantes de los gradientes~\cite{aji-heafield-2017-sparse}. El parámetro $r$ sirve para acotar el sampleo del gradiente que se quiere transmitir: a mayor $r$, mayor será la compresión teórica. 
 
 El algoritmo calcula la cardinalidad efectiva del mensaje mediante:
 

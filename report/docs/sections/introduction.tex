@@ -1,7 +1,8 @@
 \section{Introducción y Objetivos}
 
-En entrenamientos paralelizados por datos, la sincronización frecuente entre los distintos nodos degrada la velocidad del entrenamiento. Permitir que los nodos operen de forma más autónoma durante algunas épocas posterga el intercambio de gradientes y parámetros, disminuyendo así su dependencia en la red durante el entrenamiento y focalizando el tiempo de cómputo en el cálculo de gradientes y optimización del modelo.
+
+Permitir que los nodos operen de forma autónoma durante algunas épocas posterga el intercambio de parámetros, disminuyendo la dependencia de la red y priorizando el cómputo local. Sin embargo, demorar la sincronización introduce divergencia en los pesos de los nodos, un fenómeno conocido como \emph{client drift}~\cite{mcmahan2017federated}.
 
 \textbf{Pregunta de investigación.} ¿Cómo impactan las épocas offline a la velocidad y eficacia del modelo entrenado?
 
-\textbf{Objetivos.} Evaluar esta pregunta utilizando O.N.O., un sistema de entrenamiento distribuido de modelos de aprendizaje profundo que implementamos junto a mis compañeros para nuestro trabajo práctico profesional como trabajo de fin de carrera. Con ello ejecutar varios entrenamientos sobre una misma arquitectura, dataset e hiperparámetros para relevar las diferencias en cuanto al impacto real de las épocas offline.
+\textbf{Objetivos.} Evaluar esta pregunta utilizando O.N.O., un sistema de entrenamiento distribuido de modelos de aprendizaje profundo implementado como parte de un trabajo de fin de carrera. Con ello ejecutar varios entrenamientos sobre una misma arquitectura, dataset e hiperparámetros para relevar las diferencias en cuanto al impacto real de las épocas offline.
