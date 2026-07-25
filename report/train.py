@@ -129,7 +129,7 @@ def main() -> None:
     docker = Docker(ono_project_root="~/fiuba/tpp")
 
     for session in SESSIONS:
-        addrs = docker.compose_up(session.nodes, release=True)
+        addrs = docker.compose_up(session.nodes, release=True, pumba=True)
         training_config = session.config_builder(addrs, seeds[session.iteration])
         exec_training(session.name, training_config, session.iteration)
 

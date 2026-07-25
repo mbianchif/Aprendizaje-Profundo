@@ -11,15 +11,19 @@ class Docker:
     def __init__(self, ono_project_root: str):
         self.__ono_project_root = Path(ono_project_root).expanduser().resolve()
 
-    def compose_up(self, nodes: int, release: bool) -> list[str]:
+    def compose_up(self, nodes: int, release: bool = False, pumba: bool = False) -> list[str]:
         """
         Composes the nodes in a release or debug mode using the project's compose file.
         """
         COMPOSE_FILE_PATH = self.__ono_project_root / "docker" / "compose_up.py"
 
         args = ["sudo", "-S", sys.executable, COMPOSE_FILE_PATH, "--nodes", str(nodes)]
+
         if release:
             args.append("--release")
+
+        if pumba:
+            args.append("--pumba")
 
         subprocess.run(args=args)
 
