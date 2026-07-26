@@ -50,5 +50,5 @@
         0.02383286956507775
     ],
     "safetensors_path": "sessions/parameter_server-10-3/0.safetensors",
-    "secs_taken": 305.07
+    "secs_taken": 315.79
 }

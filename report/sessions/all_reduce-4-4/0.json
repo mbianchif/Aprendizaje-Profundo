@@ -50,5 +50,5 @@
         0.02521091423595359
     ],
     "safetensors_path": "sessions/all_reduce-4-4/0.safetensors",
-    "secs_taken": 293.81
+    "secs_taken": 309.12
 }
