@@ -1,34 +1,37 @@
+% architecture.tex
+
 \section{Arquitectura del Sistema y Mecanismos de Sincronización}
 
 \subsection{Componentes Principales de O.N.O.}
 \begin{itemize}
-    \item \textbf{Orchestrator:} Mediante una configuración declarativa del entrenamiento brindada por el usuario, configura al resto de nodos para iniciar el entrenamiento de un modelo usando alguno de los algoritmos implementados. Al finalizar un entrenamiento, consolida los resultados parciales generando un archivo safetensors con el resultado final que contiene los parámetros del modelo entrenado. Para una mejor automatización, cuenta con una interfaz FFI de Python que fue utilizada para simular los ensayos discutidos más adelante.
-    \item \textbf{Workers:} Computan gradientes locales por backpropagation sobre una partición asignada del dataset. En All-Reduce aplican localmente el optimizador mientras que en Parameter server delegan la actualización a los servidores.
-    \item \textbf{Servers:} Nodos dedicados al guardado y optimización de parámetros del modelo entrenado. Reciben gradientes parciales de los workers, los agregan y aplican sobre los parámetros para luego redistribuirlos y volver a empezar.
+    \item \textbf{Orchestrator:} Mediante una configuración declarativa del entrenamiento brindada por el usuario, configura al resto de nodos para iniciar el entrenamiento de un modelo usando alguno de los algoritmos implementados. Al finalizar un entrenamiento, consolida los resultados parciales generando un archivo \emph{safetensors} con el resultado final que contiene los parámetros del modelo entrenado. Para una mejor automatización, cuenta con una interfaz FFI de Python que fue utilizada para orquestar los ensayos discutidos más adelante.
+    \item \textbf{Workers:} Computan gradientes locales por \emph{backpropagation} sobre una partición asignada del dataset. En \emph{All-Reduce} aplican localmente el optimizador, mientras que en \emph{Parameter Server} delegan la actualización a los servidores.
+    \item \textbf{Servers:} Nodos dedicados al almacenamiento y optimización de parámetros del modelo. Reciben gradientes parciales de los \emph{workers}, los agregan y aplican sobre los parámetros para luego redistribuirlos.
 \end{itemize}
 
+\subsection{Dinámica de Sincronización Demorada ($E > 1$)}
+Al parametrizar $E > 1$, los nodos ejecutan $E$ épocas de entrenamiento de forma autónoma antes de realizar un intercambio de red. El tráfico de comunicación se reduce considerablemente de forma inversamente proporcional a $E$. No obstante, la falta de sincronización continua causa que los pesos locales de los \emph{workers} diverjan (\emph{client drift}). Al alcanzar la fase de sincronización, la consolidación se realiza agregando los gradientes acumulados durante dicho período.
 
-\subsection{Dinámica de Sincronización Demorada (E > 1)}
-Al parametrizar $E > 0$, los nodos entrenan aislados durante múltiples ciclos. El tráfico de red se reduce considerablemente de forma inversamente proporcional a $E$. No obstante, la falta de sincronización de estado causa que los pesos locales de cada uno de los workers diverjan (\emph{client drift}). Al alcanzar la etapa de sincronización, la consolidación se realiza por el promedio directo de los gradientes parciales.
-
-Bajo un entrenamiento optimizado por \emph{Descenso por Gradiente}, una ecuación que describe la etapa de optimización es:
+Bajo un entrenamiento optimizado por Descenso por Gradiente, la actualización del vector de parámetros global tras un intervalo de sincronización se modela como:
 
 \begin{equation}
-W_{t + 1} = W_{t} - \frac{\lambda}{N} \sum_{i=1}^{N} G_{i}
+W_{t + E} = W_{t} - \frac{\lambda}{N} \sum_{i=1}^{N} G_{i}^{(E)}
 \end{equation}
 
+donde $N$ es el número de \emph{workers}, $\lambda$ es la tasa de aprendizaje y $G_{i}^{(E)}$ representa la acumulación de gradientes calculados por el \emph{worker} $i$ a lo largo de las $E$ épocas locales.
+
 \subsection{Algoritmos de Entrenamiento Distribuido}
-El sistema implementa varios algoritmos de entrenamiento distribuido, en particular el informe se va a centrar el los siguientes:
+El sistema implementa distintos algoritmos de comunicación distribuida, centrándose este trabajo en:
 
 \begin{itemize}
-    \item \textbf{Parameter Server Sincrónico:} Un algoritmo centralizado bajo el modelo propuesto por Li et al.~\cite{li2013parameter} donde una barrera bloquea a los \emph{workers} hasta que cada \emph{server} procesa el lote global de gradientes, garantizando que todos los \emph{workers} estén en todo momento calculando gradientes de la misma epoch.
-    \item \textbf{All-Reduce:} Un algoritmo descentralizado inspirado en arquitecturas de anillo de alto rendimiento como Horovod~\cite{sergeev2018horovod}, donde los \emph{workers} se organizan en una topología de anillo lógico compartiendo fragmentos de gradientes en fases sucesivas de scatter y gather, calculando de forma idéntica y local el vector de parámetros resultante.
+    \item \textbf{Parameter Server Sincrónico:} Algoritmo centralizado basado en el modelo propuesto por Li et al.~\cite{li2013parameter}. Una barrera de sincronización bloquea a los \emph{workers} hasta que los \emph{servers} procesan el lote global de gradientes, garantizando que todos los nodos inicien el siguiente ciclo desde el mismo estado de parámetros.
+    \item \textbf{All-Reduce (Ring):} Algoritmo descentralizado inspirado en arquitecturas de alto rendimiento como Horovod~\cite{sergeev2018horovod}. Los \emph{workers} se organizan en una topología de anillo lógico y comparten fragmentos de gradientes en fases sucesivas de \emph{scatter-reduce} y \emph{all-gather}, actualizando de forma idéntica y local el vector de parámetros resultante.
 \end{itemize}
 
 \begin{figure*}[!t]
     \centering
     \includegraphics[width=0.75\textwidth]{topologies} 
-
-    \caption{Topologías distribuidas soportadas en O.N.O. (izquierda) Arquitectura centralizada bajo \emph{Parameter server} donde los \emph{workers} obienen parámetros y envían gradientes a \emph{servers} fragmentados. (derecha) Topología descentralizada en anillo \emph{All-Reduce} donde cada nodo actúan como \emph{worker} comunicándose con sus nodos adyacentes.}
+    \caption{Topologías distribuidas soportadas en O.N.O. (Izquierda) Arquitectura centralizada bajo \emph{Parameter Server} donde los \emph{workers} obtienen parámetros y envían gradientes a \emph{servers} fragmentados. (Derecha) Topología descentralizada en anillo \emph{All-Reduce} donde los nodos se comunican de forma punto a punto con sus vecinos adyacentes.}
     \label{fig:topologias_ono}
 \end{figure*}
+

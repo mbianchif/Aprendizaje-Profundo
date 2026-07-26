@@ -1,5 +1,7 @@
+% conclusion.tex
+
 \section{Conclusión}
 
-El uso de épocas offline en O.N.O. altera el balance entre comunicación y fidelidad algorítmica en el entrenamiento. En la infraestructura simulada, incrementar $E$ perjudicó al modelo entrenado de manera predecible pero sin aportar ganancias de velocidad, debido a limitaciones del hardware empleado.
+El uso de épocas offline en O.N.O. modifica el compromiso entre la frecuencia de comunicación y la convergencia algorítmica del entrenamiento. En la infraestructura evaluada, incrementar $E$ degradó la exactitud del modelo y su estabilidad de manera sostenida, sin aportar reducciones en los tiempos totales debido a la contención del hardware local.
 
-Como trabajo futuro, se plantea validar el sistema bajo configuraciones multi-computadora reales, comparando distintas arquitecturas de modelos de distintos tamaños variando $E$.
+Como trabajo futuro, se plantea validar el comportamiento del sistema en un entorno multicomputadora físico real, evaluando modelos de mayor escala y analizando estrategias de sincronización adaptativas a lo largo del entrenamiento.

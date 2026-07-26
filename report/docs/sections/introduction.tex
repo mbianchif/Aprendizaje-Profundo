@@ -1,8 +1,15 @@
-\section{Introducción y Objetivos}
+% introduction.tex
 
+\section{Introducción y Objetivos}
 
 Permitir que los nodos operen de forma autónoma durante algunas épocas posterga el intercambio de parámetros, disminuyendo la dependencia de la red y priorizando el cómputo local. Sin embargo, demorar la sincronización introduce divergencia en los pesos de los nodos, un fenómeno conocido como \emph{client drift}~\cite{mcmahan2017federated}.
 
-\textbf{Pregunta de investigación.} ¿Cómo impactan las épocas offline a la velocidad y eficacia del modelo entrenado?
+\textbf{Pregunta de investigación.} ¿Cómo impacta la variación de las épocas offline ($E$) en la velocidad de convergencia, el tiempo de comunicación y la eficacia del modelo entrenado bajo distintas topologías de red en un entorno distribuido con restricciones de red reales?
 
-\textbf{Objetivos.} Evaluar esta pregunta utilizando O.N.O., un sistema de entrenamiento distribuido de modelos de aprendizaje profundo implementado como parte de un trabajo de fin de carrera. Con ello ejecutar varios entrenamientos sobre una misma arquitectura, dataset e hiperparámetros para relevar las diferencias en cuanto al impacto real de las épocas offline.
+\textbf{Objetivos.} Evaluar esta pregunta utilizando O.N.O., un sistema de entrenamiento distribuido de modelos de aprendizaje profundo desarrollado para este trabajo. Específicamente, se busca:
+
+\begin{itemize}
+    \item Comparar el desempeño de las esquemas de sincronización \emph{Parameter Server} sincrónico y \emph{Ring All-Reduce} al variar las épocas offline $E$.
+    \item Evaluar el comportamiento del sistema en un entorno de red realista.
+    \item Cuantificar el \emph{trade-off} entre la reducción del tráfico de red y la degradación de la \emph{accuracy} final debido al \emph{client drift}.
+\end{itemize}
