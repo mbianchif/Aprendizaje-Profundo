@@ -2,7 +2,7 @@
 
 \section{Metodología Experimental}
 
-Todos los entrenamientos fueron realizados de forma secuencial utilizando Docker para instanciar un clúster multicomputadora sobre el cual Pumba emuló las condiciones de una red hogareña típica. El tiempo total de ejecución acumulado fue de \num{11} horas y \num{15} minutos. Las especificaciones técnicas del hardware y el entorno de red emulado se detallan en la \Cref{tab:environment}, mientras que las variables del modelo y del sistema O.N.O. se consolidan en la \Cref{tab:configs}.
+Todos los entrenamientos fueron realizados de forma secuencial utilizando Docker para instanciar un clúster multicomputadora sobre el cual Pumba emuló las condiciones de una red hogareña típica. El tiempo total de ejecución acumulado fue de 11 horas y 15 minutos. Las especificaciones técnicas del hardware y el entorno de red emulado se detallan en la \Cref{tab:environment}, mientras que las variables del modelo y del sistema O.N.O. se consolidan en la \Cref{tab:configs}.
 
 \begin{table}[ht]
 	\caption{Configuración de Ensayos}
@@ -43,7 +43,7 @@ La cardinalidad efectiva $k$ del mensaje se calcula mediante:
 k = \text{round}\left(|g| \cdot (1.0 - r)\right)
 \end{equation}
 
-El valor $k$ selecciona los $k$ elementos de mayor magnitud absoluta dentro del tensor de gradientes local. Todo valor que alcance o supere dicho umbral se incorpora al mensaje. En estos experimentos se fijó $r = 0.5$, filtrando el \SI{50}{\percent} de los componentes para reducir el tránsito en red. Los elementos no transmitidos se acumulan en un gradiente residual local para ser considerados en la siguiente actualización.
+El valor $k$ selecciona los $k$ elementos de mayor magnitud absoluta dentro del tensor de gradientes local. Todo valor que alcance o supere dicho umbral se incorpora al mensaje. En estos experimentos se fijó $r = 0.5$, filtrando el \qty[round-precision=0]{50}{\percent} de los componentes para reducir el tránsito en red. Los elementos no transmitidos se acumulan en un gradiente residual local para ser considerados en la siguiente actualización.
 
 \subsection{Emulación de Red con Pumba}
 
@@ -69,8 +69,8 @@ Para evaluar el desempeño en un escenario distribuido realista sobre redes resi
 			& Velocidad & \SI{2400}{\mega\hertz} \\
 		\midrule
 		\multirow{6}{*}{Red Emulada} & Retardo (Delay) & Tiempo: \SI{6}{\milli\second} \newline Jitter: \SI{15}{\milli\second} \newline Distribución: Pareto \\
-			& Pérdida de Paquetes & Probabilidad: 0.3\% \newline Correlación: 25\% \\
-			& Ancho de Banda & Tasa: \SI{150}{\mega\bit\second} \\
+			& Pérdida de Paquetes & Probabilidad: \qty[round-precision=0]{0.3}{\percent} \newline Correlación: \qty[round-precision=0]{25}{\percent} \\
+			& Ancho de Banda & Tasa: \SI[round-precision=0]{150}{\mega\bit\second} \\
 		\midrule
 		\multirow{5}{*}{Entorno de Software} & Sistema Operativo & Ubuntu 24.04 LTS \\
 			& Entorno de Ejecución & Docker v29.6.1 \newline Rust v1.96.1 \newline CPython v3.14.0 \newline Pumba 1.1.7 \\

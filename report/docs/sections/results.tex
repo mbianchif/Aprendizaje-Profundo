@@ -30,7 +30,7 @@ Cabe destacar que \emph{All-Reduce} resulta intrínsecamente más veloz en confi
 
 El impacto de la variación de $E$ se manifiesta con mayor claridad en las métricas de exactitud (\emph{accuracy}), al ser variables independientes de las limitaciones del hardware de ejecución.
 
-En ambos algoritmos, la exactitud final del modelo decrece de manera monótona a medida que se incrementa $E$. Este comportamiento es consistente con la teoría: la introducción de una única época offline ($E=1$) reduce la frecuencia de sincronización global a la mitad, provocando un deterioro inmediato de aproximadamente el \qty{1}{\percent} en la métrica final.
+En ambos algoritmos, la exactitud final del modelo decrece de manera monótona a medida que se incrementa $E$. Este comportamiento es consistente con la teoría: la introducción de una única época offline ($E=1$) reduce la frecuencia de sincronización global a la mitad, provocando un deterioro inmediato de aproximadamente el \qty[round-precision=0]{1}{\percent} en la métrica final.
 
 Vale remarcar que O.N.O. realiza las sincronizaciones a nivel de época completa ($E$). Si el esquema de sincronización operara a una granularidad más fina —como por paso de entrenamiento o \emph{mini-batch}—, la acumulación de gradientes desacoplados durante múltiples iteraciones locales tendría una frecuencia de intercambio significativamente mayor, por lo que el impacto de variar las iteraciones \emph{offline} resultaría notablemente más drástico tanto en el volumen de tráfico de red ahorrado como en la divergencia de los pesos.
 
