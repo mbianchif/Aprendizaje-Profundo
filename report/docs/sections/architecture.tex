@@ -4,7 +4,7 @@
 
 \subsection{Componentes Principales de O.N.O.}
 \begin{itemize}
-    \item \textbf{Orchestrator:} Mediante una configuración declarativa del entrenamiento brindada por el usuario, configura al resto de nodos para iniciar el entrenamiento de un modelo usando alguno de los algoritmos implementados. Al finalizar un entrenamiento, consolida los resultados parciales generando un archivo \emph{safetensors} con el resultado final que contiene los parámetros del modelo entrenado. Para una mejor automatización, cuenta con una interfaz FFI de Python que fue utilizada para orquestar los ensayos discutidos más adelante.
+    \item \textbf{Orchestrator:} Mediante una configuración declarativa del entrenamiento brindada por el usuario, configura al resto de nodos para iniciar el entrenamiento de un modelo usando alguno de los algoritmos implementados. Al finalizar un entrenamiento, consolida los resultados parciales generando un archivo \emph{safetensors} que contiene los parámetros del modelo entrenado. Para una mejor automatización, cuenta con una interfaz FFI de Python que fue utilizada para orquestar los ensayos discutidos más adelante.
     \item \textbf{Workers:} Computan gradientes locales por \emph{backpropagation} sobre una partición asignada del dataset. En \emph{All-Reduce} aplican localmente el optimizador, mientras que en \emph{Parameter Server} delegan la actualización a los servidores.
     \item \textbf{Servers:} Nodos dedicados al almacenamiento y optimización de parámetros del modelo. Reciben gradientes parciales de los \emph{workers}, los agregan y aplican sobre los parámetros para luego redistribuirlos.
 \end{itemize}
@@ -12,20 +12,20 @@
 \subsection{Dinámica de Sincronización Demorada ($E > 1$)}
 Al parametrizar $E > 1$, los nodos ejecutan $E$ épocas de entrenamiento de forma autónoma antes de realizar un intercambio de red. El tráfico de comunicación se reduce considerablemente de forma inversamente proporcional a $E$. No obstante, la falta de sincronización continua causa que los pesos locales de los \emph{workers} diverjan (\emph{client drift}). Al alcanzar la fase de sincronización, la consolidación se realiza agregando los gradientes acumulados durante dicho período.
 
-Bajo un entrenamiento optimizado por Descenso por Gradiente, la actualización del vector de parámetros global tras un intervalo de sincronización se modela como:
+Bajo un entrenamiento optimizado por \emph{Gradient Descent}, la actualización del vector de parámetros global tras un intervalo de sincronización se modela como:
 
 \begin{equation}
 W_{t + E} = W_{t} - \frac{\lambda}{N} \sum_{i=1}^{N} G_{i}^{(E)}
 \end{equation}
 
-donde $N$ es el número de \emph{workers}, $\lambda$ es la tasa de aprendizaje y $G_{i}^{(E)}$ representa la acumulación de gradientes calculados por el \emph{worker} $i$ a lo largo de las $E$ épocas locales.
+donde $N$ es el número de \emph{workers}, $\lambda$ es el \emph{learning rate} y $G_{i}^{(E)}$ representa la acumulación de gradientes calculados por el \emph{worker} $i$ a lo largo de las $E$ épocas locales.
 
 \subsection{Algoritmos de Entrenamiento Distribuido}
 El sistema implementa distintos algoritmos de comunicación distribuida, centrándose este trabajo en:
 
 \begin{itemize}
     \item \textbf{Parameter Server Sincrónico:} Algoritmo centralizado basado en el modelo propuesto por Li et al.~\cite{li2013parameter}. Una barrera de sincronización bloquea a los \emph{workers} hasta que los \emph{servers} procesan el lote global de gradientes, garantizando que todos los nodos inicien el siguiente ciclo desde el mismo estado de parámetros.
-    \item \textbf{All-Reduce (Ring):} Algoritmo descentralizado inspirado en arquitecturas de alto rendimiento como Horovod~\cite{sergeev2018horovod}. Los \emph{workers} se organizan en una topología de anillo lógico y comparten fragmentos de gradientes en fases sucesivas de \emph{scatter-reduce} y \emph{all-gather}, actualizando de forma idéntica y local el vector de parámetros resultante.
+    \item \textbf{All-Reduce (Ring):} Algoritmo descentralizado inspirado en arquitecturas de alto rendimiento como Horovod~\cite{sergeev2018horovod}. Los \emph{workers} se organizan en una topología de anillo lógico y comparten fragmentos de gradientes en fases sucesivas de \emph{scatter} y \emph{gather}, actualizando de forma idéntica y local el vector de parámetros resultante.
 \end{itemize}
 
 \begin{figure*}[!t]
